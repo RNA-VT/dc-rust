@@ -38,4 +38,4 @@ jobs:
           buildtargets: esp32
           ldproxy: true
       - name: Run command
-        run: cd {{ matrix.crate }} && cargo ${{ matrix.action.command }} ${{ matrix.action.args }}
+        run: cargo ${{ matrix.action.command }} ${{ matrix.action.args }} --manifest-path=${{ matrix.crate }}/Cargo.toml
