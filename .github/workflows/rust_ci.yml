@@ -37,5 +37,7 @@ jobs:
           default: true
           buildtargets: esp32
           ldproxy: true
+      - name: Add Xtensa Target
+        run: rustup target add xtensa-esp32-espidf
       - name: Run command
         run: cargo ${{ matrix.action.command }} --manifest-path=${{ matrix.crate }}/Cargo.toml --target=xtensa-esp32-espidf ${{ matrix.action.args }}
