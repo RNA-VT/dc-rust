@@ -28,6 +28,9 @@ jobs:
         uses: actions/checkout@v4
       - name: Enable caching
         uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "relay/ -> target
+          wifi/ -> target"
       - name: Setup Rust
         uses: esp-rs/xtensa-toolchain@v1.5
         with:
