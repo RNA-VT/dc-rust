@@ -39,5 +39,7 @@ jobs:
           wifi/ -> target"
       - name: Xtensa rustup target
         run: espup install
+      - name: Source espup script
+        run: . $HOME/export-esp.sh
       - name: Run command
         run: cargo ${{ matrix.action.command }} --manifest-path=${{ matrix.crate }}/Cargo.toml ${{ matrix.action.args }}
