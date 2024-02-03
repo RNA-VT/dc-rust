@@ -18,6 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        crate: ["relay", "rgb_led", "wifi"]
         action:
           - command: build
             args: --release
@@ -37,4 +38,4 @@ jobs:
           buildtargets: esp32
           ldproxy: true
       - name: Run command
-        run: cargo ${{ matrix.action.command }} ${{ matrix.action.args }}
+        run: cd {{ matrix.crate }} && cargo ${{ matrix.action.command }} ${{ matrix.action.args }}
