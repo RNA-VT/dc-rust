@@ -1,20 +1,14 @@
 use anyhow::Result;
 use core::str;
-use embedded_svc::{http::Method, io::Write};
+
 use esp_idf_svc::{
     eventloop::EspSystemEventLoop,
     hal::{
-        i2c::{I2cConfig, I2cDriver},
         prelude::*,
     },
-    http::server::{Configuration, EspHttpServer},
 };
-use shtcx::{self, shtc3, PowerMode};
-use std::{
-    sync::{Arc, Mutex},
-    thread::sleep,
-    time::Duration,
-};
+
+
 use log::info;
 use wifi::wifi;
 
