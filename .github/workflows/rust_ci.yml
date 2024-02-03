@@ -38,6 +38,6 @@ jobs:
           workspaces: "relay/ -> target
           wifi/ -> target"
       - name: Xtensa rustup target
-        run: rustup target add xtensa-esp32-espidf
+        run: espup install
       - name: Run command
         run: cargo ${{ matrix.action.command }} --manifest-path=${{ matrix.crate }}/Cargo.toml ${{ matrix.action.args }}
