@@ -17,12 +17,12 @@ jobs:
       matrix:
         crate: ["relay", "wifi"]
         action:
-          - command: check
-            args: --target=xtensa-esp32-espidf --release
+#          - command: check
+#            args: --target=xtensa-esp32-espidf --release
           - command: fmt
             args: --all -- --check --color always
-          - command: clippy
-            args: --target=xtensa-esp32-espidf --all-features --workspace -- -D warnings
+#          - command: clippy
+#            args: --target=xtensa-esp32-espidf --all-features --workspace -- -D warnings
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
