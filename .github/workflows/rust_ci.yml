@@ -17,7 +17,7 @@ jobs:
       matrix:
         crate: ["relay", "wifi"]
         action:
-          - command: build
+          - command: check
             args: --release
           - command: fmt
             args: --all -- --check --color always
