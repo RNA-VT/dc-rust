@@ -35,4 +35,4 @@ jobs:
           buildtargets: esp32
           ldproxy: true
       - name: Run command
-        run: cargo ${{ matrix.action.command }} --manifest-path=${{ matrix.crate }}/Cargo.toml ${{ matrix.action.args }}
+        run: cargo ${{ matrix.action.command }} --manifest-path=${{ matrix.crate }}/Cargo.toml --target=xtensa-esp32-espidf ${{ matrix.action.args }}
