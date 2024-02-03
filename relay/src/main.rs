@@ -1,15 +1,9 @@
-use anyhow::Result;
 use core::str;
 
-use esp_idf_svc::{
-    eventloop::EspSystemEventLoop,
-    hal::{
-        prelude::*,
-    },
-};
-
-
+use anyhow::Result;
+use esp_idf_svc::{eventloop::EspSystemEventLoop, hal::prelude::*};
 use log::info;
+
 use wifi::wifi;
 
 #[toml_cfg::toml_config]
@@ -20,7 +14,7 @@ pub struct Config {
     wifi_psk: &'static str,
 }
 
-fn main() -> Result<()>{
+fn main() -> Result<()> {
     // It is necessary to call this function once. Otherwise some patches to the runtime
     // implemented by esp-idf-sys might not link properly. See https://github.com/esp-rs/esp-idf-template/issues/71
     esp_idf_svc::sys::link_patches();
@@ -50,7 +44,7 @@ fn main() -> Result<()>{
         Ok(inner) => {
             info!("Status: Connection Succeeded.");
             inner
-        },
+        }
         Err(err) => {
             info!("Status: Connection Failed.");
             panic!("Could not connect to Wi-Fi network: {:?}", err)
