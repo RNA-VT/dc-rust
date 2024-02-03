@@ -26,18 +26,16 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Enable caching
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: "relay/ -> target
-          wifi/ -> target"
       - name: Setup Rust
         uses: esp-rs/xtensa-toolchain@v1.5
         with:
           default: true
           buildtargets: esp32
           ldproxy: true
-      - name: Add Xtensa Target
-        run: rustup target add xtensa-esp32-espidf
+      - name: Enable caching
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "relay/ -> target
+          wifi/ -> target"
       - name: Run command
         run: cargo ${{ matrix.action.command }} --manifest-path=${{ matrix.crate }}/Cargo.toml ${{ matrix.action.args }}
