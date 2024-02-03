@@ -18,7 +18,7 @@ jobs:
         crate: ["relay", "wifi"]
         action:
           - command: check
-            args: --release
+            args: --target=xtensa-esp32-espidf --release
           - command: fmt
             args: --all -- --check --color always
           - command: clippy
@@ -40,4 +40,4 @@ jobs:
       - name: Add Xtensa Target
         run: rustup target add xtensa-esp32-espidf
       - name: Run command
-        run: cargo ${{ matrix.action.command }} --manifest-path=${{ matrix.crate }}/Cargo.toml --target=xtensa-esp32-espidf ${{ matrix.action.args }}
+        run: cargo ${{ matrix.action.command }} --manifest-path=${{ matrix.crate }}/Cargo.toml ${{ matrix.action.args }}
