@@ -1,0 +1,45 @@
+name: Rust CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  rust-checks:
+    name: Rust Checks
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        crate: ["relay", "wifi"]
+        action:
+#          - command: check
+#            args: --target=xtensa-esp32-espidf --release
+          - command: fmt
+            args: --all -- --check --color always
+#          - command: clippy
+#            args: --target=xtensa-esp32-espidf --all-features --workspace -- -D warnings
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Setup Rust
+        uses: esp-rs/xtensa-toolchain@v1.5
+        with:
+          default: true
+          buildtargets: esp32
+          ldproxy: true
+      - name: Enable caching
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: "relay/ -> target
+          wifi/ -> target"
+      - name: Xtensa rustup target
+        run: espup install
+      - name: Source espup script
+        run: . $HOME/export-esp.sh
+      - name: Run command
+        run: cargo ${{ matrix.action.command }} --manifest-path=${{ matrix.crate }}/Cargo.toml ${{ matrix.action.args }}
