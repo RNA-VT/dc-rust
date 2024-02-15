@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 anyhow      = "=1.0.75"
-esp-idf-svc = "=0.47.3"
+esp-idf-svc = { version = "0.47.3", default-features = false }
 log         = "=0.4.20"
 
 [build-dependencies]
