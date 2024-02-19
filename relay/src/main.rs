@@ -1,14 +1,12 @@
 use core::str;
-
-
 use anyhow::{Result,bail};
-use esp_idf_svc::{eventloop::EspSystemEventLoop, hal::prelude::*,http::server::*, io::Write};
+use esp_idf_svc::{eventloop::EspSystemEventLoop, hal::prelude::*,http::server::*};
 use log::info;
-
 use wifi::wifi;
+use dc;
 
 #[toml_cfg::toml_config]
-pub struct Config {
+struct Config {
     #[default("")]
     wifi_ssid: &'static str,
     #[default("")]
@@ -50,47 +48,30 @@ fn main() -> Result<()> {
         }
     };
 
-    // Set the HTTP server
     let mut server = EspHttpServer::new(&Configuration::default())?;
-    // http://<sta ip>/ handler
-    server.fn_handler("/", Method::Get, |request| {
-        let html = index_html();
-        let mut response = request.into_ok_response()?;
-        response.write_all(html.as_bytes())?;
-        Ok(())
-    })?;
+
+    server = match dc::server(server) {
+        Some(server) => {
+            info!("DC Server Successfully Started.");
+            server
+        }
+        None => {
+            info!("!!!ERROR!!!");
+            bail!("DC Server Failed to Start.");
+        }
+    };
+
+    server.fn_handler("/on", Method::Post, |_request| {Ok(())}).expect("Failed to create /on Handler");
+    server.fn_handler("/off", Method::Post, |_request| {Ok(())}).expect("Failed to create /off Handler");
 
     loop {
-        // Blue!
-        info!("Blue");
-        info!("Doing things...");
+        info!("Blue!");
+        info!("Doing Things!");
+        std::thread::sleep(std::time::Duration::from_secs(1));
+        info!("Green!");
         std::thread::sleep(std::time::Duration::from_secs(1));
 
-        // Green!
-        info!("Green");
-        // Wait...
-        std::thread::sleep(std::time::Duration::from_secs(1));
     }
-}
 
-fn templated(content: impl AsRef<str>) -> String {
-    format!(
-        r#"
-<!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <title>esp-rs web server</title>
-    </head>
-    <body>
-        {}
-    </body>
-</html>
-"#,
-        content.as_ref()
-    )
-}
 
-fn index_html() -> String {
-    templated("Hello from ESP32-C3!")
 }
