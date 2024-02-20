@@ -5,6 +5,7 @@ use esp_idf_svc::{
     wifi::{AuthMethod, BlockingWifi, ClientConfiguration, Configuration, EspWifi},
 };
 use log::info;
+use heapless::*;
 
 pub fn wifi(
     ssid: &str,
@@ -50,9 +51,15 @@ pub fn wifi(
         None
     };
 
+    let mut heapless_ssid: heapless::String<32> = String::new();
+    heapless_ssid.push_str(ssid).unwrap();
+
+    let mut heapless_pass: heapless::String<64> = String::new();
+    heapless_pass.push_str(pass).unwrap();
+
     wifi.set_configuration(&Configuration::Client(ClientConfiguration {
-        ssid: ssid.into(),
-        password: pass.into(),
+        ssid: heapless_ssid,
+        password: heapless_pass,
         channel,
         auth_method,
         ..Default::default()
