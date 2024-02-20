@@ -81,7 +81,7 @@ fn main() -> Result<()> {
 
 
     info!("about to declare pin driver");
-    let mut p = PinDriver::output(peripherals.pins.gpio11.downgrade_output())?;
+    let p = PinDriver::output(peripherals.pins.gpio11.downgrade_output())?;
 
     info!("about to declare mutex");
     let pin_relay = Arc::new(Mutex::new(p));
