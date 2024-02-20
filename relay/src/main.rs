@@ -78,23 +78,22 @@ fn main() -> Result<()> {
         }
     };
 
-
-
     info!("Get GPIO pin(s)");
     let gpio = peripherals.pins.gpio4.downgrade_output();
 
     info!("Set Pin IO Mode");
-    let p = PinDriver::output(gpio)?;
+    let mut p = PinDriver::output(gpio)?;
 
+    info!("Set Initial Pin State(s)");
     p.set_high()?;
 
-    info!("Pin Mutex");
+    info!("Mutex(es)");
     let pin_relay = Arc::new(Mutex::new(p));
 
     info!("Instantiate Server");
     let mut server = EspHttpServer::new(&Configuration::default())?;
 
-    info!("Add Routes and Handlers");
+    info!("Adding DC Routes and Handlers");
     server = match dc::server(server, "relay".to_string(), vec![
         SpecificationEndpoint {
             method: String::from("close"),
@@ -116,7 +115,7 @@ fn main() -> Result<()> {
         }
     };
 
-    info!("Adding Close Handler");
+    info!("Adding Relay Close Handler");
     server.fn_handler(
         "/close",
         Method::Post,
@@ -133,9 +132,9 @@ fn main() -> Result<()> {
             }
 
         }
-    ).expect("Failed to create /on Handler");
+    ).expect("Failed to create /close Handler");
 
-    info!("Adding Open Handler");
+    info!("Adding Relay Open Handler");
     server.fn_handler(
         "/open",
         Method::Post,
@@ -152,15 +151,16 @@ fn main() -> Result<()> {
             }
 
         }
-    ).expect("Failed to create /off Handler");
+    ).expect("Failed to create /open Handler");
 
     loop {
-        info!("Blue!");
-        info!("Doing Things!");
+        let mut pin = pin_relay.lock().unwrap();
+        if pin.is_set_high(){
+            info!("High")
+        } else {
+            info!("Low")
+        }
         std::thread::sleep(std::time::Duration::from_secs(1));
-        info!("Green!");
-        std::thread::sleep(std::time::Duration::from_secs(1));
-
     }
 }
 
