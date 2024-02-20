@@ -5,6 +5,7 @@ use esp_idf_svc::{
     wifi::{AuthMethod, BlockingWifi, ClientConfiguration, Configuration, EspWifi},
 };
 use log::info;
+
 use heapless::*;
 
 pub fn wifi(

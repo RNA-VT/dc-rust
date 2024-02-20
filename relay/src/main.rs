@@ -1,33 +1,23 @@
-use core::str;
-use anyhow::{Result,bail};
-use std::sync::{Arc,Mutex};
-use log::info;
+use std::sync::{Arc, Mutex};
 
-use esp_idf_sys as _;
-
+use anyhow::{bail, Result};
+use dc::SpecificationEndpoint;
+use esp_idf_hal::{
+    gpio::{OutputPin, PinDriver},
+    peripherals::Peripherals,
+};
 use esp_idf_svc::{
     eventloop::EspSystemEventLoop,
     http::server::*,
-    sys::ESP_OK,
     sys::{
-        nvs_flash_init,
-        ESP_ERR_NVS_NO_FREE_PAGES,
-        ESP_ERR_NVS_NEW_VERSION_FOUND,
-        nvs_flash_erase
-    }
+        nvs_flash_erase, nvs_flash_init, ESP_ERR_NVS_NEW_VERSION_FOUND, ESP_ERR_NVS_NO_FREE_PAGES,
+        ESP_OK,
+    },
 };
-
-use esp_idf_hal::{
-    peripherals::Peripherals,
-    gpio::{
-        PinDriver,
-        OutputPin
-    }
-};
-
+use log::info;
 use wifi::wifi;
-use dc::{SpecificationEndpoint};
 
+use esp_idf_sys as _;
 
 #[toml_cfg::toml_config]
 struct Config {
@@ -94,17 +84,20 @@ fn main() -> Result<()> {
     let mut server = EspHttpServer::new(&Configuration::default())?;
 
     info!("Adding DC Routes and Handlers");
-    server = match dc::server(server, "relay".to_string(), vec![
-        SpecificationEndpoint {
-            method: String::from("close"),
-            parameters: vec![],
-        },
-        SpecificationEndpoint {
-            method: String::from("open"),
-            parameters: vec![],
-        },
-        // Add more endpoints as needed
-    ]) {
+    server = match dc::server(
+        server,
+        "relay".to_string(),
+        vec![
+            SpecificationEndpoint {
+                method: String::from("close"),
+                parameters: vec![],
+            },
+            SpecificationEndpoint {
+                method: String::from("open"),
+                parameters: vec![],
+            },
+        ],
+    ) {
         Ok(server) => {
             info!("DC Server Successfully Started.");
             server
@@ -116,46 +109,36 @@ fn main() -> Result<()> {
     };
 
     info!("Adding Relay Close Handler");
-    server.fn_handler(
-        "/close",
-        Method::Post,
-        |_request| {
+    server
+        .fn_handler("/close", Method::Post, |_request| {
             let mut pin = pin_relay.lock().unwrap();
             match pin.set_low() {
-                Ok(()) => {
-                    Ok(())
-                }
+                Ok(()) => Ok(()),
                 Err(e) => {
                     info!("Could not set pin state");
                     Err(e)
                 }
             }
-
-        }
-    ).expect("Failed to create /close Handler");
+        })
+        .expect("Failed to create /close Handler");
 
     info!("Adding Relay Open Handler");
-    server.fn_handler(
-        "/open",
-        Method::Post,
-        |_request| {
+    server
+        .fn_handler("/open", Method::Post, |_request| {
             let mut pin = pin_relay.lock().unwrap();
             match pin.set_high() {
-                Ok(()) => {
-                    Ok(())
-                }
+                Ok(()) => Ok(()),
                 Err(e) => {
                     info!("Could not set pin state");
                     Err(e)
                 }
             }
-
-        }
-    ).expect("Failed to create /open Handler");
+        })
+        .expect("Failed to create /open Handler");
 
     loop {
         let mut pin = pin_relay.lock().unwrap();
-        if pin.is_set_high(){
+        if pin.is_set_high() {
             info!("High")
         } else {
             info!("Low")
@@ -164,12 +147,11 @@ fn main() -> Result<()> {
     }
 }
 
-
 fn nvs_init() -> Result<(), EspError> {
     unsafe {
         let mut ret = nvs_flash_init();
         if ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND {
-            info!("{}",format_args!("Need to erase flash: rc = {}", ret));
+            info!("{}", format_args!("Need to erase flash: rc = {}", ret));
             err(nvs_flash_erase())?;
             ret = nvs_flash_init();
         }
