@@ -80,23 +80,28 @@ fn main() -> Result<()> {
 
 
 
-    info!("about to declare pin driver");
-    let p = PinDriver::output(peripherals.pins.gpio11.downgrade_output())?;
+    info!("Get GPIO pin(s)");
+    let gpio = peripherals.pins.gpio4.downgrade_output();
 
-    info!("about to declare mutex");
+    info!("Set Pin IO Mode");
+    let p = PinDriver::output(gpio)?;
+
+    p.set_high()?;
+
+    info!("Pin Mutex");
     let pin_relay = Arc::new(Mutex::new(p));
 
-    info!("about to declare server");
+    info!("Instantiate Server");
     let mut server = EspHttpServer::new(&Configuration::default())?;
 
-    info!("about to add endpoints to server");
+    info!("Add Routes and Handlers");
     server = match dc::server(server, "relay".to_string(), vec![
         SpecificationEndpoint {
-            method: String::from("open"),
+            method: String::from("close"),
             parameters: vec![],
         },
         SpecificationEndpoint {
-            method: String::from("close"),
+            method: String::from("open"),
             parameters: vec![],
         },
         // Add more endpoints as needed
@@ -111,9 +116,9 @@ fn main() -> Result<()> {
         }
     };
 
-    info!("about to add first handler to server");
+    info!("Adding Close Handler");
     server.fn_handler(
-        "/on",
+        "/close",
         Method::Post,
         |_request| {
             let mut pin = pin_relay.lock().unwrap();
@@ -130,9 +135,9 @@ fn main() -> Result<()> {
         }
     ).expect("Failed to create /on Handler");
 
-    info!("about to add second handler to server");
+    info!("Adding Open Handler");
     server.fn_handler(
-        "/off",
+        "/open",
         Method::Post,
         |_request| {
             let mut pin = pin_relay.lock().unwrap();
