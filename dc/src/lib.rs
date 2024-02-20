@@ -43,7 +43,7 @@ pub fn server(mut server: EspHttpServer, device_type: String, endpoints: Vec<Spe
     id.push_str("-");
     id.push_str(&mac_hex_strings.join("-"));
 
-    let _specification = Specification {
+    let specification = Specification {
         id,
         device_type,
         mac: mac_hex_strings.join(":"),
@@ -60,24 +60,25 @@ pub fn server(mut server: EspHttpServer, device_type: String, endpoints: Vec<Spe
         })
     )?;
 
-    // (*server).fn_handler("/specification", Method::Post, |request: Request<&mut EspHttpConnection>|{
-    //     let json_response = serde_json::to_string(&specification).expect("Failed to Serialize JSON");
-    //
-    //     let mut response = request.into_ok_response().expect("Failed to create response from request");
-    //     response.write(json_response.as_bytes()).expect("Failed to write JSON Response");
-    //     Ok(())
-    // }).expect("Failed to create root handler");
-    //
-    // match (*server).fn_handler("/health", Method::Post, |_request| {
-    //     Ok(())
-    // }){
-    //     Ok(_inner) => {
-    //         ()
-    //     }
-    //     Err(e) => {
-    //         return None
-    //     }
-    // }
+    server.fn_handler::<EspIOError,_>(
+        "/specification",
+        Method::Post,
+        move |request|{
+            let json_response = serde_json::to_string(&specification).expect("Failed to Serialize JSON");
+
+            let mut response = request.into_ok_response().expect("Failed to create response from request");
+            response.write(json_response.as_bytes()).expect("Failed to write JSON Response");
+            Ok(())
+        }
+    )?;
+
+    server.fn_handler::<EspIOError,_>(
+        "/health",
+        Method::Post,
+        |_request| {
+            Ok(())
+        }
+    )?;
 
     Ok(server)
 }
