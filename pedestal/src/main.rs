@@ -3,7 +3,7 @@
 
 use panic_halt as _;
 use arduino_hal::prelude::*;
-use max485::{Max485};
+use max485::Max485;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -23,7 +23,17 @@ fn main() -> ! {
 
     // Array to store the status of solenoids
     let mut solenoid_states = [false; 8];
-    let serial = arduino_hal::default_serial!(dp, pins, 9600);
+    
+    let serial = arduino_hal::Usart::new(
+        dp.USART0,
+        pins.d0,
+        pins.d1.into_output(),
+        arduino_hal::hal::usart::BaudrateArduinoExt::into_baudrate(19200), // RS485
+        // arduino_hal::hal::usart::BaudrateArduinoExt::into_baudrate(57600), // USB
+    );
+    
+    // USB
+    // serial.write_str("hi hi").expect("should have written hi hi");
 
     // Max485 initialization
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
