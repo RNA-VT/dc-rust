@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        crate: ["relay", "wifi", "dc"]
+        crate: ["relay", "wifi", "dc", "controller", "fire", "hotline"]
         action:
 #          - command: check
 #            args: --target=xtensa-esp32-espidf --release
@@ -37,7 +37,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "relay/ -> target
-          wifi/ -> target"
+          wifi/ -> target
+          controller/ -> target
+          fire/ -> target"
+
       - name: Xtensa rustup target
         run: espup install
       - name: Source espup script
