@@ -2,6 +2,7 @@ name: Rust CI
 
 on:
   pull_request:
+    types: [opened, synchronize]
   workflow_dispatch:
 
 env:
@@ -15,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        crate: ["relay", "wifi"]
+        crate: ["relay", "wifi", "dc"]
         action:
 #          - command: check
 #            args: --target=xtensa-esp32-espidf --release
