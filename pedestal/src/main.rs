@@ -3,7 +3,7 @@
 
 use panic_halt as _;
 use arduino_hal::prelude::*;
-use max485::{Max485, Error};
+use max485::{Max485};
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -11,19 +11,19 @@ fn main() -> ! {
     let pins = arduino_hal::pins!(dp);
 
     // Pins for solenoids
-    let mut pin_solenoid_1 = pins.d22.into_pull_up_input();
-    let mut pin_solenoid_2 = pins.d24.into_pull_up_input();
-    let mut pin_solenoid_3 = pins.d26.into_pull_up_input();
-    let mut pin_solenoid_4 = pins.d28.into_pull_up_input();
-    let mut pin_solenoid_5 = pins.d30.into_pull_up_input();
-    let mut pin_solenoid_all = pins.d31.into_pull_up_input();
+    let pin_solenoid_1 = pins.d22.into_pull_up_input();
+    let pin_solenoid_2 = pins.d24.into_pull_up_input();
+    let pin_solenoid_3 = pins.d26.into_pull_up_input();
+    let pin_solenoid_4 = pins.d28.into_pull_up_input();
+    let pin_solenoid_5 = pins.d30.into_pull_up_input();
+    let pin_solenoid_all = pins.d31.into_pull_up_input();
 
     // RS485 digital output pin
-    let mut pin_rs485_enable = pins.d2.into_output();
+    let pin_rs485_enable = pins.d2.into_output();
 
     // Array to store the status of solenoids
     let mut solenoid_states = [false; 8];
-    let mut serial = arduino_hal::default_serial!(dp, pins, 9600);
+    let serial = arduino_hal::default_serial!(dp, pins, 9600);
 
     // Max485 initialization
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
