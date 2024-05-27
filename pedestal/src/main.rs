@@ -1,17 +1,26 @@
 #![no_std]
 #![no_main]
 
-use core::fmt::Debug;
-use embedded_hal::can::Error;
-use panic_halt as _;
+extern crate panic_halt;
 use arduino_hal::prelude::*;
 use max485::Max485;
+use core::fmt::{Debug, Write};
+use arduino_hal::DefaultClock;
+use arduino_hal::hal::Atmega;
+use arduino_hal::hal::port::{PE0, PE1, PJ0, PJ1};
+use arduino_hal::hal::usart::Usart0;
+use arduino_hal::pac::{USART0, USART3};
+use arduino_hal::port::mode::{Input, Output};
+use arduino_hal::port::Pin;
+use arduino_hal::Usart;
 
 #[arduino_hal::entry]
 fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
 
+
+    let pin_input = pins.d13.into_pull_up_input();
     // Pins for solenoids
     let pin_solenoid_1 = pins.d22.into_pull_up_input();
     let pin_solenoid_2 = pins.d24.into_pull_up_input();
@@ -20,9 +29,11 @@ fn main() -> ! {
     let pin_solenoid_5 = pins.d30.into_pull_up_input();
     let pin_solenoid_all = pins.d31.into_pull_up_input();
 
-    // Array to store the status of solenoids
-    let mut solenoid_states = [false; 8];
+    // RS485 digital output pin
+    let mut pin_rs485_enable = pins.d2.into_output();
+    pin_rs485_enable.set_high();
 
+    // Initialize USB serial for debugging
     let mut usb = arduino_hal::Usart::new(
         dp.USART0,
         pins.d0,
@@ -30,54 +41,46 @@ fn main() -> ! {
         arduino_hal::hal::usart::BaudrateArduinoExt::into_baudrate(57600), // USB
     );
 
+    // Initialize RS485 serial communication
     let serial = arduino_hal::Usart::new(
         dp.USART3,
         pins.d15,
         pins.d14.into_output(),
-        arduino_hal::hal::usart::BaudrateArduinoExt::into_baudrate(19200), // RS485
+        arduino_hal::hal::usart::BaudrateArduinoExt::into_baudrate(256000), // RS485
     );
 
-    // USB
-    usb.write_str("hi hi\n").expect("should have written hi hi");
-
-    // RS485 digital output pin
-    usb.write_str("enable rs485 tx\n").expect("usb write");
-    let mut pin_rs485_enable = pins.d2.into_output();
-    pin_rs485_enable.set_high();
-
-    usb.write_str("init rs485\n").expect("usb write");
     // Max485 initialization
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
-    // 0x00 - 2 bytes,
-    // Device Address - 2 bytes,
-    // 0x00 - 2 bytes,
-    // Relay Address - 2 bytes,
-    // Command - 2 bytes
-    // 0x00 - 2 bytes
-    // CRC Checksum - 2 bytes
-    let mut crc;
 
+    // Set Baud Rate initialization message
+    usb.write_str("Set Baud Rate RS485\n").unwrap();
+    let mut init_cmd: [u8; 8] = [0x00, 0x06, 0x20, 0x00, 0x00, 0x07, 0x5C, 0x1b];
+    let crc = modbus_crc(&init_cmd[..6]);
+    init_cmd[6] = (crc & 0xFF) as u8;
+    init_cmd[7] = (crc >> 8) as u8;
+
+    // Convert the cmd array to a string of hex values
+    let mut buffer = [0u8; 32]; // Adjust the size as needed
+    let cmd_str = HexFormatter::bytes_to_hex_string(&init_cmd, &mut buffer);
+    usb.write_str(cmd_str).unwrap();
+
+    send_command(&mut usb, &mut rs485, &mut init_cmd);
+
+    // Send initialization message
+    usb.write_str("Set Device Address\n").unwrap();
+    let mut init_cmd: [u8; 8] = [0x00, 0x06, 0x40, 0x00, 0x00, 0x01, 0x5C, 0x1b];
+    let crc = modbus_crc(&init_cmd[..6]);
+    init_cmd[6] = (crc & 0xFF) as u8;
+    init_cmd[7] = (crc >> 8) as u8;
+
+    send_command(&mut usb, &mut rs485, &mut init_cmd);
+
+    // Delay for stability
     arduino_hal::delay_ms(100);
 
-    usb.write_str("set device address\n").expect("usb write");
-    // set device address
-    let mut cmd: [u8; 8] = [0x00, 0x06, 0x40, 0x00, 0x00, 0x01, 0x5C, 0x1b];
-    for byte in &cmd {
-        match rs485.write(*byte) {
-            Ok(()) => {
-                usb.write_str("RS485 Write Success\n").expect("usb write fail");
-            }
-            Err(_error) => {
-                usb.write_str("RS485 Write Fail\n").expect("usb write fail");
-            }
-        }
-    }
-
-    usb.write_str("device address set, entering loop\n").expect("usb write");
-
-    // base relay command
-    cmd = [
-        0x01, // Device Address
+    // Base relay command setup
+    let mut cmd: [u8; 8] = [
+        0x00, // Device Address
         0x05, // Command Relay
         0x00, // Always 0
         0x00, // Relay ID 0x00 - 0x08
@@ -86,69 +89,68 @@ fn main() -> ! {
         0x00, // CRC16 byte 0
         0x00  // CRC16 byte 1
     ];
-
+    let mut high = true;
     loop {
-        usb.write_str("in loop\n").expect("usb write");
+        usb.write_str("In loop\n").unwrap();
+        cmd[3] = 0xFF;
+        cmd[4] = 0x55;
+        let crc = modbus_crc(&cmd[..6]);
+        cmd[6] = (crc & 0xFF) as u8;
+        cmd[7] = (crc >> 8) as u8;
 
-        if pin_solenoid_all.is_high() {
-            solenoid_states[0] = true;
-            solenoid_states[1] = true;
-            solenoid_states[2] = true;
-            solenoid_states[3] = true;
-            solenoid_states[4] = true;
-        } else {
-            solenoid_states[0] = pin_solenoid_1.is_high();
-            solenoid_states[1] = pin_solenoid_2.is_high();
-            solenoid_states[2] = pin_solenoid_3.is_high();
-            solenoid_states[3] = pin_solenoid_4.is_high();
-            solenoid_states[4] = pin_solenoid_5.is_high();
-        //     for i in 0..8 {
-        //         cmd[3] = i;
-        //         if solenoid_states[i as usize] {
-        //             cmd[4] = 0xFF;
-        //         } else {
-        //             cmd[4] = 0;
-        //         }
-        //         crc = modbus_crc(&cmd[..6]);
-        //         cmd[6] = (crc & 0xFF) as u8;
-        //         cmd[7] = (crc >> 8) as u8;
-
-        //         for byte in &cmd {
-        //             rs485.write(*byte).expect("failed to write rs485");
-        //         }
-        //     }
-        }
-
-        let mut x = 0xFF;
         for i in 0..8 {
-            cmd[3] = i;
-            if x == 0xFF {
-                cmd[4] = 0x0;
-                x = 0x0;
+            rs485.flush().unwrap();
+            cmd[3] = i as u8;
+            if high {
+                cmd[4]=0xFF;
             } else {
-                cmd[4] = 0xFF;
-                x = 0xFF;
+                cmd[4]=0x00;
             }
-            crc = modbus_crc(&cmd[..6]);
+
+            let crc = modbus_crc(&cmd[..6]);
             cmd[6] = (crc & 0xFF) as u8;
             cmd[7] = (crc >> 8) as u8;
-            usb.write_str("Command: ").unwrap();
-            let cmd_str = cmd.iter().map(|byte| format!("{:02X}", byte)).collect().join(" ");
+
+            // Convert the cmd array to a string of hex values
+            let mut buffer = [0u8; 32]; // Adjust the size as needed
+            let cmd_str = HexFormatter::bytes_to_hex_string(&cmd, &mut buffer);
+            usb.write_str("Sending Command: ").unwrap();
             usb.write_str(cmd_str).unwrap();
-            usb.write_str("\n").unwrap();
-            for byte in &cmd {
-                match rs485.write(*byte) {
-                    Ok(()) => {
-                        usb.write_str("RS485 Success\n").expect("usb write fail");
-                    }
-                    Err(_error) => {
-                        usb.write_str("RS485 Fail\n").expect("usb write fail");
-                    }
-                }
+            send_command(&mut usb, &mut rs485, &mut cmd);
+        }
+        arduino_hal::delay_ms(10);
+        usb.write_str("\n").unwrap();
+        high = !high;
+
+        if pin_input.is_high() {
+            usb.write_str("Channel 1 High\n").unwrap();
+        } else {
+            usb.write_str("Channel 1 Low\n").unwrap();
+        }
+        arduino_hal::delay_ms(62);
+    }
+}
+
+fn send_command(usb: &mut Usart<Pin<Input, PJ0>, Pin<Output, PJ1>, DefaultClock>, rs485: &mut Max485<Usart<Pin<Input, PJ0>, Pin<Output,PJ1>, DefaultClock>,  Pin<Output, PE1>>, cmd: &mut [u8; 8]) {
+    // Convert the cmd array to a string of hex values
+    let mut buffer = [0u8; 32]; // Adjust the size as needed
+    let cmd_str = HexFormatter::bytes_to_hex_string(cmd, &mut buffer);
+    usb.write_str(cmd_str).unwrap();
+
+    for byte in cmd {
+        match rs485.write(*byte) {
+            Ok(()) => {
+                usb.write_str(".").unwrap()
+            }
+            Err(e) => {
+                let mut error_buffer = [0u8; 64];
+                let mut output_buffer = [0u8; 64];
+                let error_str = format_error_string(e, &mut error_buffer, &mut output_buffer);
+                usb.write_str(error_str.into()).unwrap();
+                usb.write_str("\n").unwrap();
             }
         }
-
-        arduino_hal::delay_ms(200);
+        arduino_hal::delay_us(600);
     }
 }
 
@@ -203,4 +205,72 @@ pub fn modbus_crc(data: &[u8]) -> u16 {
     }
 
     ((crc_high as u16) << 8) | (crc_low as u16)
+}
+
+struct HexFormatter;
+
+impl HexFormatter {
+    fn byte_to_hex(byte: u8) -> (char, char) {
+        const HEX_DIGITS: &[u8; 16] = b"0123456789ABCDEF";
+        (
+            HEX_DIGITS[(byte >> 4) as usize] as char,
+            HEX_DIGITS[(byte & 0x0F) as usize] as char,
+        )
+    }
+
+    fn bytes_to_hex_string<'a>(buf: &[u8], output: &'a mut [u8]) -> &'a str {
+        let mut index = 0;
+        for &byte in buf {
+            if index > 0 {
+                output[index] = b' ';
+                index += 1;
+            }
+            let (high, low) = Self::byte_to_hex(byte);
+            output[index] = high as u8;
+            output[index + 1] = low as u8;
+            index += 2;
+        }
+        core::str::from_utf8(&output[..index]).unwrap()
+    }
+}
+struct SimpleWriter<'a> {
+    buffer: &'a mut [u8],
+    index: usize,
+}
+
+impl<'a> SimpleWriter<'a> {
+    fn new(buffer: &'a mut [u8]) -> Self {
+        Self { buffer, index: 0 }
+    }
+
+    fn as_str(&self) -> &str {
+        core::str::from_utf8(&self.buffer[..self.index]).unwrap()
+    }
+}
+
+impl<'a> Write for SimpleWriter<'a> {
+    fn write_str(&mut self, s: &str) -> core::fmt::Result {
+        let bytes = s.as_bytes();
+        let len = bytes.len();
+
+        if self.index + len <= self.buffer.len() {
+            self.buffer[self.index..self.index + len].copy_from_slice(bytes);
+            self.index += len;
+            Ok(())
+        } else {
+            Err(core::fmt::Error)
+        }
+    }
+}
+
+fn format_error_string<'a>(
+    error: impl core::fmt::Debug,
+    buffer: &'a mut [u8],
+    output: &'a mut [u8],
+) -> &'a str {
+    let mut writer = SimpleWriter::new(buffer);
+    write!(writer, "{:?}", error).unwrap();
+    let result = writer.as_str();
+    output[..result.len()].copy_from_slice(result.as_bytes());
+    core::str::from_utf8(&output[..result.len()]).unwrap()
 }
