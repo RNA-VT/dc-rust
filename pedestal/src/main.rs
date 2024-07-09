@@ -64,7 +64,25 @@ fn main() -> ! {
     let cmd_str = HexFormatter::bytes_to_hex_string(&init_cmd, &mut buffer);
     usb.write_str(cmd_str).unwrap();
 
-    send_command(&mut usb, &mut rs485, &mut init_cmd);
+    let mut buffer1 = [0u8; 32]; // Adjust the size as needed
+    let cmd_str1 = HexFormatter::bytes_to_hex_string(&mut init_cmd, &mut buffer1);
+    usb.write_str(cmd_str1).unwrap();
+
+    for byte in &mut init_cmd {
+        match rs485.write(*byte) {
+            Ok(()) => {
+                usb.write_str(".").unwrap()
+            }
+            Err(e) => {
+                let mut error_buffer = [0u8; 64];
+                let mut output_buffer = [0u8; 64];
+                let error_str = format_error_string(e, &mut error_buffer, &mut output_buffer);
+                usb.write_str(error_str.into()).unwrap();
+                usb.write_str("\n").unwrap();
+            }
+        }
+        arduino_hal::delay_us(600);
+    }
 
     // Send initialization message
     usb.write_str("Set Device Address\n").unwrap();
@@ -73,7 +91,25 @@ fn main() -> ! {
     init_cmd[6] = (crc & 0xFF) as u8;
     init_cmd[7] = (crc >> 8) as u8;
 
-    send_command(&mut usb, &mut rs485, &mut init_cmd);
+    let mut buffer1 = [0u8; 32]; // Adjust the size as needed
+    let cmd_str1 = HexFormatter::bytes_to_hex_string(&mut init_cmd, &mut buffer1);
+    usb.write_str(cmd_str1).unwrap();
+
+    for byte in &mut init_cmd {
+        match rs485.write(*byte) {
+            Ok(()) => {
+                usb.write_str(".").unwrap()
+            }
+            Err(e) => {
+                let mut error_buffer = [0u8; 64];
+                let mut output_buffer = [0u8; 64];
+                let error_str = format_error_string(e, &mut error_buffer, &mut output_buffer);
+                usb.write_str(error_str.into()).unwrap();
+                usb.write_str("\n").unwrap();
+            }
+        }
+        arduino_hal::delay_us(600);
+    }
 
     // Delay for stability
     arduino_hal::delay_ms(100);
@@ -116,7 +152,25 @@ fn main() -> ! {
             let cmd_str = HexFormatter::bytes_to_hex_string(&cmd, &mut buffer);
             usb.write_str("Sending Command: ").unwrap();
             usb.write_str(cmd_str).unwrap();
-            send_command(&mut usb, &mut rs485, &mut cmd);
+            let mut buffer1 = [0u8; 32]; // Adjust the size as needed
+            let cmd_str1 = HexFormatter::bytes_to_hex_string(&mut cmd, &mut buffer1);
+            usb.write_str(cmd_str1).unwrap();
+
+            for byte in &mut cmd {
+                match rs485.write(*byte) {
+                    Ok(()) => {
+                        usb.write_str(".").unwrap()
+                    }
+                    Err(e) => {
+                        let mut error_buffer = [0u8; 64];
+                        let mut output_buffer = [0u8; 64];
+                        let error_str = format_error_string(e, &mut error_buffer, &mut output_buffer);
+                        usb.write_str(error_str.into()).unwrap();
+                        usb.write_str("\n").unwrap();
+                    }
+                }
+                arduino_hal::delay_us(600);
+            }
         }
         arduino_hal::delay_ms(10);
         usb.write_str("\n").unwrap();
@@ -128,29 +182,6 @@ fn main() -> ! {
             usb.write_str("Channel 1 Low\n").unwrap();
         }
         arduino_hal::delay_ms(62);
-    }
-}
-
-fn send_command(usb: &mut Usart<Pin<Input, PJ0>, Pin<Output, PJ1>, DefaultClock>, rs485: &mut Max485<Usart<Pin<Input, PJ0>, Pin<Output,PJ1>, DefaultClock>,  Pin<Output, PE1>>, cmd: &mut [u8; 8]) {
-    // Convert the cmd array to a string of hex values
-    let mut buffer = [0u8; 32]; // Adjust the size as needed
-    let cmd_str = HexFormatter::bytes_to_hex_string(cmd, &mut buffer);
-    usb.write_str(cmd_str).unwrap();
-
-    for byte in cmd {
-        match rs485.write(*byte) {
-            Ok(()) => {
-                usb.write_str(".").unwrap()
-            }
-            Err(e) => {
-                let mut error_buffer = [0u8; 64];
-                let mut output_buffer = [0u8; 64];
-                let error_str = format_error_string(e, &mut error_buffer, &mut output_buffer);
-                usb.write_str(error_str.into()).unwrap();
-                usb.write_str("\n").unwrap();
-            }
-        }
-        arduino_hal::delay_us(600);
     }
 }
 
