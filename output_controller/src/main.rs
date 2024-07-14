@@ -65,7 +65,7 @@ fn main() -> ! {
             Some((device_id, dio_id, state)) => {
                 // TODO: Handle Device ID
                 if dio_id == 0xFF {
-                    if state == 0xFF {
+                    if state == 0x01 {
                         pin_output_1.set_high();
                         pin_output_2.set_high();
                         pin_output_3.set_high();
