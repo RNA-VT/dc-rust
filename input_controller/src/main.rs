@@ -129,7 +129,7 @@ fn main() -> ! {
 }
 
 type UsartType =
-arduino_hal::Usart<arduino_hal::pac::USART3, port::Pin<Input, PJ0>, port::Pin<Output, PJ1>>;
+    arduino_hal::Usart<arduino_hal::pac::USART3, port::Pin<Input, PJ0>, port::Pin<Output, PJ1>>;
 type Max485Type = Max485<UsartType, port::Pin<Output, PE4>>;
 fn send_command(serial: &mut Max485Type, device_id: u8, dio_id: u8, state: u8) -> Result<(), ()> {
     // Create command
