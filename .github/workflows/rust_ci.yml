@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        crate: ["relay", "wifi", "dc", "input_controller", "output_controller", "hotline"]
+        crate: ["relay", "wifi", "dc", "input_controller", "megapoofer", "sign", "hotline"]
         action:
 #          - command: check
 #            args: --target=xtensa-esp32-espidf --release
@@ -39,7 +39,8 @@ jobs:
           workspaces: "relay/ -> target
           wifi/ -> target
           input_controller/ -> target
-          output_controller/ -> target"
+          sign/ -> target
+          megapoofer/ -> target"
 
       - name: Xtensa rustup target
         run: espup install

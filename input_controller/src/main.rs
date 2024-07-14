@@ -3,12 +3,12 @@
 
 extern crate panic_halt;
 
-use arduino_hal::hal::port::{PE4, PJ0, PJ1, PC6, PA0, PA2, PA4, PA6, PC7, PC1, PC3, PC4, PC5};
+use arduino_hal::hal::port::{PA0, PA2, PA4, PA6, PC1, PC3, PC4, PC5, PC6, PC7, PE4, PJ0, PJ1};
 use arduino_hal::port;
+use arduino_hal::port::mode::PullUp;
 use arduino_hal::port::mode::{Input, Output};
 use arduino_hal::prelude::*;
 use max485::Max485;
-use arduino_hal::port::mode::PullUp;
 
 use hotline::hotline::create_command;
 
@@ -85,7 +85,7 @@ fn main() -> ! {
             if sign_pin_pilot.is_high() {
                 if !sign_pilot {
                     usb.write_str("Lighting Sign Pilot ...").unwrap();
-                    send_command(&mut rs485, 0x00,0x05,0x01).unwrap();
+                    send_command(&mut rs485, 0x00, 0x05, 0x01).unwrap();
                     sign_pilot = true;
                 }
                 check_and_send_sign_commands(
@@ -102,7 +102,7 @@ fn main() -> ! {
             } else {
                 if sign_pilot {
                     usb.write_str("Turning off Sign Pilot ...").unwrap();
-                    send_command(&mut rs485, 0x00,0x05,0x00).unwrap();
+                    send_command(&mut rs485, 0x00, 0x05, 0x00).unwrap();
                     sign_pilot = false;
                 }
             }
@@ -113,7 +113,7 @@ fn main() -> ! {
             if mp_pin_pilot.is_high() {
                 if !mp_pilot {
                     usb.write_str("Lighting MegaPoofer Pilot ...").unwrap();
-                    send_command(&mut rs485, 0x01,0x03,0x01).unwrap();
+                    send_command(&mut rs485, 0x01, 0x03, 0x01).unwrap();
                     mp_pilot = true;
                 }
                 check_and_send_mp_commands(
@@ -128,7 +128,7 @@ fn main() -> ! {
             } else {
                 if mp_pilot {
                     usb.write_str("Turning Off MegaPoofer Pilot ...").unwrap();
-                    send_command(&mut rs485, 0x01,0x03,0x00).unwrap();
+                    send_command(&mut rs485, 0x01, 0x03, 0x00).unwrap();
                     mp_pilot = false;
                 }
             }
@@ -152,11 +152,11 @@ fn check_and_send_sign_commands(
     if current_state_all && !*previous_state_all {
         send_command(rs485, 0x00, 0xFF, 0x01).unwrap();
         *previous_state_all = current_state_all;
-        return
+        return;
     } else if !current_state_all && *previous_state_all {
         send_command(rs485, 0x00, 0xFF, 0x00).unwrap();
         *previous_state_all = current_state_all;
-        return
+        return;
     }
 
     let sol1 = solenoid_1_pin.is_high();
@@ -214,11 +214,11 @@ fn check_and_send_mp_commands(
     if current_state_all && !*previous_state_all {
         send_command(rs485, 0x01, 0xFF, 0x01).unwrap();
         *previous_state_all = current_state_all;
-        return
+        return;
     } else if !current_state_all && *previous_state_all {
         send_command(rs485, 0x01, 0xFF, 0x00).unwrap();
         *previous_state_all = current_state_all;
-        return
+        return;
     }
 
     let sol1 = solenoid_1_pin.is_high();
@@ -247,7 +247,7 @@ fn check_and_send_mp_commands(
 }
 
 type UsartType =
-arduino_hal::Usart<arduino_hal::pac::USART3, port::Pin<Input, PJ0>, port::Pin<Output, PJ1>>;
+    arduino_hal::Usart<arduino_hal::pac::USART3, port::Pin<Input, PJ0>, port::Pin<Output, PJ1>>;
 type Max485Type = Max485<UsartType, port::Pin<Output, PE4>>;
 
 fn send_command(serial: &mut Max485Type, device_id: u8, dio_id: u8, state: u8) -> Result<(), ()> {
