@@ -1,7 +1,7 @@
-controller
-========
+Hotline Output Controller
+==========
 
-Rust project for the _Arduino Mega 2560_.
+This project controls up to 13 digital outputs through received Hotline RS485 communication.
 
 ## Build Instructions
 1. Install prerequisites as described in the [`avr-hal` README] (`avr-gcc`, `avr-libc`, `avrdude`, [`ravedude`]).
@@ -19,9 +19,14 @@ Rust project for the _Arduino Mega 2560_.
 [`ravedude`]: https://crates.io/crates/ravedude
 
 ## License
-Licensed under:
+Licensed under either of
+
+ - Apache License, Version 2.0
+   ([LICENSE-APACHE](LICENSE-APACHE) or <http://www.apache.org/licenses/LICENSE-2.0>)
  - MIT license
    ([LICENSE-MIT](LICENSE-MIT) or <http://opensource.org/licenses/MIT>)
+
+at your option.
 
 ## Contribution
 Unless you explicitly state otherwise, any contribution intentionally submitted

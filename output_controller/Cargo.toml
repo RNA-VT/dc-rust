@@ -1,12 +1,12 @@
 [package]
-name = "controller"
+name = "output_controller"
 version = "0.1.0"
 authors = ["Tushar Shah <twoshark@gmail.com>"]
 edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [[bin]]
-name = "controller"
+name = "output_controller"
 test = false
 bench = false
 
@@ -16,7 +16,7 @@ ufmt = "0.2.0"
 nb = "0.1.2"
 embedded-hal = "0.2.3"
 max485 = "0.2.0"
-hotline = { path = "../hotline" }
+hotline = {path = "../hotline"}
 
 [dependencies.arduino-hal]
 git = "https://github.com/rahix/avr-hal"
@@ -41,3 +41,4 @@ codegen-units = 1
 debug = true
 lto = true
 opt-level = "s"
+
