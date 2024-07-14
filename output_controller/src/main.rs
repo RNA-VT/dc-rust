@@ -9,9 +9,7 @@ use arduino_hal::pac::USART3;
 use arduino_hal::port;
 use arduino_hal::port::mode::{Input, Output};
 use arduino_hal::port::Pin;
-use arduino_hal::prelude::*;
 use arduino_hal::Usart;
-use core::fmt::Write;
 use embedded_hal::serial::Read;
 use max485::Max485;
 use ufmt::uWrite;
@@ -81,10 +79,7 @@ fn receive_command(
     loop {
         let byte = nb::block!(serial.read()).unwrap();
         // Wait for the start delimiter
-        if index == 0 && byte == 0xFF {
-            buffer[index] = byte;
-            index += 1;
-        } else if index == 1 && buffer[0] == 0xFF && byte == 0x00 {
+        if (index == 0 && byte == 0xFF) || (index == 1 && buffer[0] == 0xFF && byte == 0x00) {
             buffer[index] = byte;
             index += 1;
         } else if index > 1 {

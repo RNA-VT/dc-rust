@@ -6,8 +6,6 @@ pub mod hotline {
     use arduino_hal::port::mode::{Input, Output};
     use arduino_hal::port::Pin;
     use arduino_hal::Usart;
-    use core::fmt::{self, Write};
-    use ufmt::uWrite;
 
     const START_DELIMITER: [u8; 2] = [0xBE, 0xEF];
     const END_DELIMITER: [u8; 2] = [0xDE, 0xAD];
@@ -73,50 +71,5 @@ pub mod hotline {
         }
 
         Some((device_id, dio_id, state))
-    }
-
-    struct HexWriter {
-        buffer: [u8; 4], // Extended to handle up to 4 characters
-        pos: usize,
-    }
-
-    impl HexWriter {
-        fn new() -> Self {
-            HexWriter {
-                buffer: [0; 4],
-                pos: 0,
-            }
-        }
-
-        fn as_str(&self) -> &str {
-            // Safety: This is safe because we know that `buffer` will always contain valid UTF-8 data.
-            core::str::from_utf8(&self.buffer[..self.pos]).unwrap()
-        }
-    }
-
-    impl fmt::Write for HexWriter {
-        fn write_str(&mut self, s: &str) -> fmt::Result {
-            for &b in s.as_bytes() {
-                if self.pos < self.buffer.len() {
-                    self.buffer[self.pos] = b;
-                    self.pos += 1;
-                }
-            }
-            Ok(())
-        }
-    }
-
-    impl ufmt::uWrite for HexWriter {
-        type Error = core::convert::Infallible;
-
-        fn write_str(&mut self, s: &str) -> Result<(), Self::Error> {
-            for &b in s.as_bytes() {
-                if self.pos < self.buffer.len() {
-                    self.buffer[self.pos] = b;
-                    self.pos += 1;
-                }
-            }
-            Ok(())
-        }
     }
 }

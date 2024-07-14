@@ -1,7 +1,7 @@
 Hotline Input Controller
 ========
 
-This project takes up to 13 inputs and sends messages over RS485 to 
+This project takes up to 13 inputs and sends messages over RS485 to up to (theoretically) 254 Hotline Output Controllers.
 
 ## Build Instructions
 1. Install prerequisites as described in the [`avr-hal` README] (`avr-gcc`, `avr-libc`, `avrdude`, [`ravedude`]).
