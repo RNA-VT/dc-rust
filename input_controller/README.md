@@ -3,6 +3,30 @@ Hotline Input Controller
 
 This project takes up to 13 inputs and sends messages over RS485 to up to (theoretically) 254 Hotline Output Controllers.
 
+# 
+
+| Installation | Controlled Device | Control          | Input Pin | Hotline Device ID | DIO ID | Output Pin | Relay Input/Output | Notes                                    |
+|--------------|-------------------|------------------|-----------|-------------------|--------|------------|--------------------|------------------------------------------|
+|              |                   |                  |           |                   |        |            |                    |                                          |
+| General      | Chaos             | Covered Switch   | D35       | --                | --     | --         | --                 | Activate Chaos Input Mode                |
+|              |                   |                  |           |                   |        |            |                    |                                          |
+| MegaPoofer   | Solenoid 1        | Momentary Switch | D32       | 0x00              | 0x00   | D22        | 1                  |                                          |
+| MegaPoofer   | Solenoid 2        | Momentary Switch | D34       | 0x00              | 0x01   | D24        | 2                  |                                          |
+| MegaPoofer   | Solenoid 3        | Momentary Switch | D36       | 0x00              | 0x02   | D26        | 3                  |                                          |
+| MegaPoofer   | Pilot             | Covered Switch   | D44       | 0x00              | 0x03   | D28        | 4                  | Pilot solenoid and glowflys              |
+| MegaPoofer   | All               | Momentary Switch | D33       | 0x00              | 0xFF   | --         | --                 | Set all solenoid states                  |
+| MegaPoofer   | Arm Sign          | Covered Switch   | D42       | --                | --     | --         | --                 | Enable Sending of Commands to MegaPoofer |
+|              |                   |                  |           |                   |        |            |                    |                                          |
+| Sign         | Solenoid 1        | Momentary Switch | D22       | 0x00              | 0x00   | D22        | 1                  |                                          |
+| Sign         | Solenoid 2        | Momentary Switch | D24       | 0x00              | 0x01   | D24        | 2                  |                                          |
+| Sign         | Solenoid 3        | Momentary Switch | D26       | 0x00              | 0x02   | D26        | 3                  |                                          |
+| Sign         | Solenoid 4        | Momentary Switch | D28       | 0x00              | 0x03   | D28        | 4                  |                                          |
+| Sign         | Solenoid 5        | Momentary Switch | D30       | 0x00              | 0x04   | D30        | 5                  |                                          |
+| Sign         | Pilot             | Covered Switch   | D40       | 0x00              | 0x05   | D22        | 6                  | Pilot solenoid and glowflys              |
+| Sign         | All               | Momentary Switch | D31       | 0x00              | 0xFF   | --         | --                 | Set all solenoid states                  |
+| Sign         | Arm Sign          | Covered Switch   | D38       | --                | --     | --         | --                 | Enable Sending of Commands to Sign       |
+
+
 ## Build Instructions
 1. Install prerequisites as described in the [`avr-hal` README] (`avr-gcc`, `avr-libc`, `avrdude`, [`ravedude`]).
 
