@@ -6,8 +6,8 @@ pub mod hotline {
     use arduino_hal::port::mode::{Input, Output};
     use arduino_hal::port::Pin;
     use arduino_hal::Usart;
+    use core::fmt::{self, Write};
     use ufmt::uWrite;
-    use core::fmt::{self,Write};
 
     const START_DELIMITER: [u8; 2] = [0xBE, 0xEF];
     const END_DELIMITER: [u8; 2] = [0xDE, 0xAD];
@@ -39,7 +39,10 @@ pub mod hotline {
         full_command
     }
 
-    pub fn parse_command(buffer: &[u8; 9], usb: &mut Usart<USART0, Pin<Input, PE0>, Pin<Output, PE1>>) -> Option<(u8, u8, u8)> {
+    pub fn parse_command(
+        buffer: &[u8; 9],
+        usb: &mut Usart<USART0, Pin<Input, PE0>, Pin<Output, PE1>>,
+    ) -> Option<(u8, u8, u8)> {
         let start_delimiter = &buffer[0..2];
         let end_delimiter = &buffer[7..9];
 
@@ -116,5 +119,4 @@ pub mod hotline {
             Ok(())
         }
     }
-
 }

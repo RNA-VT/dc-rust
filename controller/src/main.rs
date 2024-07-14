@@ -80,11 +80,8 @@ fn send_command(serial: &mut Max485Type, device_id: u8, dio_id: u8, state: u8) -
     // Send command bytesI'
     for byte in &command {
         match serial.write(*byte) {
-            Ok(()) => {
-            }
-            Err(_) => {
-                return Err(())
-            }
+            Ok(()) => {}
+            Err(_) => return Err(()),
         };
         arduino_hal::delay_us(100);
     }

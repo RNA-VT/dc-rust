@@ -3,18 +3,18 @@
 
 extern crate panic_halt;
 
-use arduino_hal::hal::port::{PE0, PE1, PJ0, PJ1, PE4};
+use arduino_hal::hal::port::{PE0, PE1, PE4, PJ0, PJ1};
+use arduino_hal::pac::USART0;
 use arduino_hal::pac::USART3;
 use arduino_hal::port;
-use arduino_hal::port::Pin;
 use arduino_hal::port::mode::{Input, Output};
+use arduino_hal::port::Pin;
 use arduino_hal::prelude::*;
 use arduino_hal::Usart;
 use core::fmt::Write;
 use embedded_hal::serial::Read;
 use max485::Max485;
 use ufmt::uWrite;
-use arduino_hal::pac::USART0;
 
 use hotline::hotline::parse_command;
 
@@ -53,7 +53,7 @@ fn main() -> ! {
 
     loop {
         // Read a byte from the serial connection
-        match receive_command(&mut rs485,&mut usb) {
+        match receive_command(&mut rs485, &mut usb) {
             Some((device_id, dio_id, state)) => {
                 usb.write_str("Received command - ").unwrap();
                 ufmt::uwrite!(
@@ -71,7 +71,10 @@ fn main() -> ! {
         }
     }
 }
-fn receive_command(serial: &mut Max485Type, usb: &mut  Usart<USART0, Pin<Input, PE0>, Pin<Output, PE1>>) -> Option<(u8, u8, u8)> {
+fn receive_command(
+    serial: &mut Max485Type,
+    usb: &mut Usart<USART0, Pin<Input, PE0>, Pin<Output, PE1>>,
+) -> Option<(u8, u8, u8)> {
     let mut buffer = [0u8; 9];
     let mut index = 0;
 
@@ -89,7 +92,7 @@ fn receive_command(serial: &mut Max485Type, usb: &mut  Usart<USART0, Pin<Input, 
             index += 1;
             // If the buffer is full, try to parse the command
             if index == 9 {
-                return parse_command(&buffer,usb);
+                return parse_command(&buffer, usb);
             }
         } else {
             // Reset if the start delimiter is not correct
