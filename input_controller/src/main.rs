@@ -8,7 +8,6 @@ use arduino_hal::port;
 use arduino_hal::port::mode::{Input, Output};
 use arduino_hal::prelude::*;
 use max485::Max485;
-use embedded_hal::digital::v2::InputPin;
 use arduino_hal::port::mode::PullUp;
 
 use hotline::hotline::create_command;
