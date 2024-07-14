@@ -26,9 +26,7 @@ fn main() -> ! {
     let mut pin_solenoid_1 = pins.d22.into_output();
     let mut pin_solenoid_2 = pins.d24.into_output();
     let mut pin_solenoid_3 = pins.d26.into_output();
-    let mut pin_solenoid_4 = pins.d28.into_output();
-    let mut pin_solenoid_5 = pins.d30.into_output();
-    let mut pin_pilot = pins.d32.into_output();
+    let mut pin_pilot = pins.d28.into_output();
 
     // RS485 digital output pin
     let mut pin_rs485_enable = pins.d2.into_output();
@@ -57,22 +55,18 @@ fn main() -> ! {
         // Read a byte from the serial connection
         match receive_command(&mut rs485, &mut usb) {
             Some((device_id, dio_id, state)) => {
-                if device_id == 0x00 {
+                if device_id == 0x01 {
                     if dio_id == 0xFF {
                         if state == 0x01 {
                             pin_solenoid_1.set_low();
                             pin_solenoid_2.set_low();
                             pin_solenoid_3.set_low();
-                            pin_solenoid_4.set_low();
-                            pin_solenoid_5.set_low();
                         } else {
                             pin_solenoid_1.set_high();
                             pin_solenoid_2.set_high();
                             pin_solenoid_3.set_high();
-                            pin_solenoid_4.set_high();
-                            pin_solenoid_5.set_high();
                         }
-                    } else if dio_id < 6 {
+                    } else if dio_id < 4 {
                         if states[dio_id as usize] != state {
                             match dio_id {
                                 0 => {
@@ -97,20 +91,6 @@ fn main() -> ! {
                                     }
                                 }
                                 3 => {
-                                    if state == 0x01 {
-                                        pin_solenoid_4.set_low();
-                                    } else {
-                                        pin_solenoid_4.set_high();
-                                    }
-                                }
-                                4 => {
-                                    if state == 0x01 {
-                                        pin_solenoid_5.set_low();
-                                    } else {
-                                        pin_solenoid_5.set_high();
-                                    }
-                                }
-                                5 => {
                                     if state == 0x01 {
                                         pin_pilot.set_low();
                                     } else {
