@@ -1,8 +1,7 @@
-Hotline Input Controller
+MindShark Fire Input Controller
 ========
 
-This project takes up to 13 inputs and sends messages over RS485 to up to (theoretically) 254 Hotline Output Controllers.
-
+Controller for MindShark's Sign and MegaPoofer
 # 
 
 | Installation | Controlled Device | Control          | Input Pin | Hotline Device ID | DIO ID | Output Pin | Relay Input/Output | Notes                                    |
