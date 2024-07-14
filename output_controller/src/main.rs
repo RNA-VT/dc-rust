@@ -58,7 +58,7 @@ fn main() -> ! {
 
     // Max485 initialization
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
-    let states: [u8; 12] = [0; 12];
+    let mut states: [u8; 12] = [0; 12];
     loop {
         // Read a byte from the serial connection
         match receive_command(&mut rs485, &mut usb) {
@@ -183,6 +183,7 @@ fn main() -> ! {
                                 usb.write_str("Invalid DIO ID Received").unwrap();
                             }
                         }
+                        states[dio_id as usize] = state;
                     }
                 } else {
                     usb.write_str("Invalid DIO ID Received").unwrap();
