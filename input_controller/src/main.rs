@@ -56,7 +56,6 @@ fn main() -> ! {
 
     loop {
         rs485.flush().unwrap();
-        usb.write_str("In loop\n").unwrap();
 
         if pin_all.is_high() {
             send_command(&mut rs485, 0x00, 0xFF, 0x01).unwrap();

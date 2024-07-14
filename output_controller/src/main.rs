@@ -47,8 +47,6 @@ fn main() -> ! {
     // Max485 initialization
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
 
-    usb.write_str("Serial Init Complete\n").unwrap();
-
     loop {
         // Read a byte from the serial connection
         match receive_command(&mut rs485, &mut usb) {
