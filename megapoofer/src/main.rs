@@ -23,18 +23,12 @@ type Max485Type = Max485<UsartType, port::Pin<Output, PE4>>;
 fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
-    let mut pin_output_1 = pins.d22.into_output();
-    let mut pin_output_2 = pins.d24.into_output();
-    let mut pin_output_3 = pins.d26.into_output();
-    let mut pin_output_4 = pins.d28.into_output();
-    let mut pin_output_5 = pins.d30.into_output();
-    let mut pin_output_6 = pins.d32.into_output();
-    let mut pin_output_7 = pins.d34.into_output();
-    let mut pin_output_8 = pins.d36.into_output();
-    let mut pin_output_9 = pins.d38.into_output();
-    let mut pin_output_10 = pins.d40.into_output();
-    let mut pin_output_11 = pins.d42.into_output();
-    let mut pin_output_12 = pins.d44.into_output();
+    let mut pin_solenoid_1 = pins.d22.into_output();
+    let mut pin_solenoid_2 = pins.d24.into_output();
+    let mut pin_solenoid_3 = pins.d26.into_output();
+    let mut pin_solenoid_4 = pins.d28.into_output();
+    let mut pin_solenoid_5 = pins.d30.into_output();
+    let mut pin_pilot = pins.d32.into_output();
 
     // RS485 digital output pin
     let mut pin_rs485_enable = pins.d2.into_output();
@@ -63,140 +57,85 @@ fn main() -> ! {
         // Read a byte from the serial connection
         match receive_command(&mut rs485, &mut usb) {
             Some((device_id, dio_id, state)) => {
-                // TODO: Handle Device ID
-                if dio_id == 0xFF {
-                    if state == 0x01 {
-                        pin_output_1.set_high();
-                        pin_output_2.set_high();
-                        pin_output_3.set_high();
-                        pin_output_4.set_high();
-                        pin_output_5.set_high();
-                        pin_output_6.set_high();
-                        pin_output_7.set_high();
-                        pin_output_8.set_high();
-                        pin_output_9.set_high();
-                        pin_output_10.set_high();
-                        pin_output_11.set_high();
-                        pin_output_12.set_high();
-                    } else {
-                        pin_output_1.set_low();
-                        pin_output_2.set_low();
-                        pin_output_3.set_low();
-                        pin_output_4.set_low();
-                        pin_output_5.set_low();
-                        pin_output_6.set_low();
-                        pin_output_7.set_low();
-                        pin_output_8.set_low();
-                        pin_output_9.set_low();
-                        pin_output_10.set_low();
-                        pin_output_11.set_low();
-                        pin_output_12.set_low();
-                    }
-                } else if dio_id < 12 {
-                    if states[dio_id as usize] != state {
-                        match dio_id {
-                            0 => {
-                                if state == 0x01 {
-                                    pin_output_1.set_high();
-                                } else {
-                                    pin_output_1.set_low();
-                                }
-                            }
-                            1 => {
-                                if state == 0x01 {
-                                    pin_output_2.set_high();
-                                } else {
-                                    pin_output_2.set_low();
-                                }
-                            }
-                            2 => {
-                                if state == 0x01 {
-                                    pin_output_3.set_high();
-                                } else {
-                                    pin_output_3.set_low();
-                                }
-                            }
-                            3 => {
-                                if state == 0x01 {
-                                    pin_output_4.set_high();
-                                } else {
-                                    pin_output_4.set_low();
-                                }
-                            }
-                            4 => {
-                                if state == 0x01 {
-                                    pin_output_5.set_high();
-                                } else {
-                                    pin_output_5.set_low();
-                                }
-                            }
-                            5 => {
-                                if state == 0x01 {
-                                    pin_output_6.set_high();
-                                } else {
-                                    pin_output_6.set_low();
-                                }
-                            }
-                            6 => {
-                                if state == 0x01 {
-                                    pin_output_7.set_high();
-                                } else {
-                                    pin_output_7.set_low();
-                                }
-                            }
-                            7 => {
-                                if state == 0x01 {
-                                    pin_output_8.set_high();
-                                } else {
-                                    pin_output_8.set_low();
-                                }
-                            }
-                            8 => {
-                                if state == 0x01 {
-                                    pin_output_9.set_high();
-                                } else {
-                                    pin_output_9.set_low();
-                                }
-                            }
-                            9 => {
-                                if state == 0x01 {
-                                    pin_output_10.set_high();
-                                } else {
-                                    pin_output_10.set_low();
-                                }
-                            }
-                            10 => {
-                                if state == 0x01 {
-                                    pin_output_11.set_high();
-                                } else {
-                                    pin_output_11.set_low();
-                                }
-                            }
-                            11 => {
-                                if state == 0x01 {
-                                    pin_output_12.set_high();
-                                } else {
-                                    pin_output_12.set_low();
-                                }
-                            }
-                            _ => {
-                                usb.write_str("Invalid DIO ID Received").unwrap();
-                            }
+                if device_id == 0x00 {
+                    if dio_id == 0xFF {
+                        if state == 0x01 {
+                            pin_solenoid_1.set_low();
+                            pin_solenoid_2.set_low();
+                            pin_solenoid_3.set_low();
+                            pin_solenoid_4.set_low();
+                            pin_solenoid_5.set_low();
+                        } else {
+                            pin_solenoid_1.set_high();
+                            pin_solenoid_2.set_high();
+                            pin_solenoid_3.set_high();
+                            pin_solenoid_4.set_high();
+                            pin_solenoid_5.set_high();
                         }
-                        states[dio_id as usize] = state;
+                    } else if dio_id < 6 {
+                        if states[dio_id as usize] != state {
+                            match dio_id {
+                                0 => {
+                                    if state == 0x01 {
+                                        pin_solenoid_1.set_low();
+                                    } else {
+                                        pin_solenoid_1.set_high();
+                                    }
+                                }
+                                1 => {
+                                    if state == 0x01 {
+                                        pin_solenoid_2.set_low();
+                                    } else {
+                                        pin_solenoid_2.set_high();
+                                    }
+                                }
+                                2 => {
+                                    if state == 0x01 {
+                                        pin_solenoid_3.set_low();
+                                    } else {
+                                        pin_solenoid_3.set_high();
+                                    }
+                                }
+                                3 => {
+                                    if state == 0x01 {
+                                        pin_solenoid_4.set_low();
+                                    } else {
+                                        pin_solenoid_4.set_high();
+                                    }
+                                }
+                                4 => {
+                                    if state == 0x01 {
+                                        pin_solenoid_5.set_low();
+                                    } else {
+                                        pin_solenoid_5.set_high();
+                                    }
+                                }
+                                5 => {
+                                    if state == 0x01 {
+                                        pin_pilot.set_low();
+                                    } else {
+                                        pin_pilot.set_high();
+                                    }
+                                }
+                                _ => {
+                                    usb.write_str("Invalid DIO ID Received").unwrap();
+                                }
+                            }
+                            states[dio_id as usize] = state;
+                        }
+                    } else {
+                        usb.write_str("Invalid DIO ID Received").unwrap();
                     }
-                } else {
-                    usb.write_str("Invalid DIO ID Received").unwrap();
+                    usb.write_str("Received command - ").unwrap();
+                    ufmt::uwrite!(
+                        usb,
+                        "Device ID: {:X}, DIO ID: {:X}, State: {:X}\n",
+                        device_id,
+                        dio_id,
+                        state
+                    )
+                    .unwrap();
                 }
-                usb.write_str("Received command - ").unwrap();
-                ufmt::uwrite!(
-                    usb,
-                    "Device ID: {:X}, DIO ID: {:X}, State: {:X}\n",
-                    device_id,
-                    dio_id,
-                    state
-                )
-                .unwrap();
             }
             None => {
                 usb.write_str("Failed to parse command.\n").unwrap();
