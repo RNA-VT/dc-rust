@@ -17,7 +17,7 @@ fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
 
-    // Initialize all pins for the Sign
+    // Sign
     let sign_pin_all = pins.d31.into_pull_up_input();
     let sign_pin_input_1 = pins.d22.into_pull_up_input();
     let sign_pin_input_2 = pins.d24.into_pull_up_input();
@@ -27,13 +27,17 @@ fn main() -> ! {
     let sign_pin_arm = pins.d38.into_pull_up_input();
     let sign_pin_pilot = pins.d40.into_pull_up_input();
 
-    // Initialize all pins for the MegaPoofer
+    // MegaPoofer
     let mp_pin_all = pins.d33.into_pull_up_input();
     let mp_pin_input_1 = pins.d32.into_pull_up_input();
     let mp_pin_input_2 = pins.d34.into_pull_up_input();
     let mp_pin_input_3 = pins.d36.into_pull_up_input();
     let mp_pin_arm = pins.d42.into_pull_up_input();
     let mp_pin_pilot = pins.d44.into_pull_up_input();
+
+    // Configuration
+    let config_pin_enable_sign = pins.d3.into_pull_up_input();
+    let config_pin_enable_mp = pins.d4.into_pull_up_input();
 
     // RS485 digital output pin
     let mut pin_rs485_enable = pins.d2.into_output();
@@ -58,6 +62,9 @@ fn main() -> ! {
     // Max485 initialization
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
 
+    let sign_control_enabled = config_pin_enable_sign.is_high();
+    let mp_control_enabled = config_pin_enable_mp.is_high();
+
     // Initial states for Sign
     let mut previous_sign_state_all = sign_pin_all.is_high();
     let mut previous_sign_states = [
@@ -68,68 +75,76 @@ fn main() -> ! {
         sign_pin_input_5.is_high(),
     ];
 
-    // Initial states for MegaPoofer
+    if mp_control_enabled
+    
+    {
+        // Initial states for MegaPoofer
     let mut previous_mp_state_all = mp_pin_all.is_high();
     let mut previous_mp_states = [
         mp_pin_input_1.is_high(),
         mp_pin_input_2.is_high(),
         mp_pin_input_3.is_high(),
     ];
+}
     let mut sign_pilot = false;
     let mut mp_pilot = false;
     loop {
         rs485.flush().unwrap();
 
-        // Handle Sign pins
-        if sign_pin_arm.is_high() {
-            if sign_pin_pilot.is_high() {
-                if !sign_pilot {
-                    usb.write_str("Lighting Sign Pilot ...").unwrap();
-                    send_command(&mut rs485, 0x00, 0x05, 0x01).unwrap();
-                    sign_pilot = true;
-                }
-                check_and_send_sign_commands(
-                    &mut rs485,
-                    &sign_pin_all,
-                    &sign_pin_input_1,
-                    &sign_pin_input_2,
-                    &sign_pin_input_3,
-                    &sign_pin_input_4,
-                    &sign_pin_input_5,
-                    &mut previous_sign_state_all,
-                    &mut previous_sign_states,
-                );
-            } else {
-                if sign_pilot {
-                    usb.write_str("Turning off Sign Pilot ...").unwrap();
-                    send_command(&mut rs485, 0x00, 0x05, 0x00).unwrap();
-                    sign_pilot = false;
+        if sign_control_enabled {
+            // Handle Sign pins
+            if sign_pin_arm.is_high() {
+                if sign_pin_pilot.is_high() {
+                    if !sign_pilot {
+                        usb.write_str("Lighting Sign Pilot ...").unwrap();
+                        send_command(&mut rs485, 0x00, 0x05, 0x01).unwrap();
+                        sign_pilot = true;
+                    }
+                    check_and_send_sign_commands(
+                        &mut rs485,
+                        &sign_pin_all,
+                        &sign_pin_input_1,
+                        &sign_pin_input_2,
+                        &sign_pin_input_3,
+                        &sign_pin_input_4,
+                        &sign_pin_input_5,
+                        &mut previous_sign_state_all,
+                        &mut previous_sign_states,
+                    );
+                } else {
+                    if sign_pilot {
+                        usb.write_str("Turning off Sign Pilot ...").unwrap();
+                        send_command(&mut rs485, 0x00, 0x05, 0x00).unwrap();
+                        sign_pilot = false;
+                    }
                 }
             }
         }
 
-        // Handle MegaPoofer pins
-        if mp_pin_arm.is_high() {
-            if mp_pin_pilot.is_high() {
-                if !mp_pilot {
-                    usb.write_str("Lighting MegaPoofer Pilot ...").unwrap();
-                    send_command(&mut rs485, 0x01, 0x03, 0x01).unwrap();
-                    mp_pilot = true;
-                }
-                check_and_send_mp_commands(
-                    &mut rs485,
-                    &mp_pin_all,
-                    &mp_pin_input_1,
-                    &mp_pin_input_2,
-                    &mp_pin_input_3,
-                    &mut previous_mp_state_all,
-                    &mut previous_mp_states,
-                );
-            } else {
-                if mp_pilot {
-                    usb.write_str("Turning Off MegaPoofer Pilot ...").unwrap();
-                    send_command(&mut rs485, 0x01, 0x03, 0x00).unwrap();
-                    mp_pilot = false;
+        if mp_control_enabled {
+            // Handle MegaPoofer pins
+            if mp_pin_arm.is_high() {
+                if mp_pin_pilot.is_high() {
+                    if !mp_pilot {
+                        usb.write_str("Lighting MegaPoofer Pilot ...").unwrap();
+                        send_command(&mut rs485, 0x01, 0x03, 0x01).unwrap();
+                        mp_pilot = true;
+                    }
+                    check_and_send_mp_commands(
+                        &mut rs485,
+                        &mp_pin_all,
+                        &mp_pin_input_1,
+                        &mp_pin_input_2,
+                        &mp_pin_input_3,
+                        &mut previous_mp_state_all,
+                        &mut previous_mp_states,
+                    );
+                } else {
+                    if mp_pilot {
+                        usb.write_str("Turning Off MegaPoofer Pilot ...").unwrap();
+                        send_command(&mut rs485, 0x01, 0x03, 0x00).unwrap();
+                        mp_pilot = false;
+                    }
                 }
             }
         }
