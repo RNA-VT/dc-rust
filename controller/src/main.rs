@@ -30,7 +30,7 @@ fn main() -> ! {
         (pins.d38.into_pull_up_input(), 0x08),
         (pins.d40.into_pull_up_input(), 0x09),
         (pins.d42.into_pull_up_input(), 0x10),
-        (pins.d44.into_pull_up_input(), 0x12),
+        (pins.d44.into_pull_up_input(), 0x11),
     ];
 
     // RS485 digital output pin

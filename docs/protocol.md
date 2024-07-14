@@ -16,7 +16,7 @@ This document defines the delimiters and commands for communication between a co
   - 0x00-0xFE (device ID)
 - $DIO_ID:
   - 0xFF (broadcast)
-  - 0x00 - 0x08 (digital output ID)
+  - 0x00 - 0x11 (digital output ID)
 - $STATE:
   - 0x00 (low)
   - 0x01 (high)
