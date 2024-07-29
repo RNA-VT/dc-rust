@@ -14,18 +14,17 @@ This document defines the delimiters and commands for communication between a co
 - $DEVICE_ID:
   - 0xFF (broadcast)
   - 0x00-0xFE (device ID)
-- $DIO_ID:
-  - 0xFF (broadcast)
-  - 0x00 - 0x11 (digital output ID)
-- $STATE:
-  - 0x00 (low)
-  - 0x01 (high)
+- $DIO_STATE_0:
+  - Device States for Devices 0-15
+- $DIO_STATE_1:
 - $CRC8
   - Calculated CRC
 
-| Name      | Byte 0 | Byte 1 | Byte 2     | Byte 3  | Byte 4 | Byte 5 | Byte 6 | Byte 7 |
-|-----------|--------|--------|------------|---------|--------|--------|--------|--------|
-| Set State | 0xBE   | 0xEF   | $DEVICE_ID | $DIO_ID | $STATE | $CRC8  | 0xDE   | 0xAD   |
+
+| Name           | Byte 0 | Byte 1 | Byte 2     | Byte 3       | Byte 4       | Byte 5 | Byte 6 | Byte 7 | 
+|----------------|--------|--------|------------|--------------|--------------|--------|--------|--------|
+| Set Full State | 0xBE   | 0xEF   | $DEVICE_ID | $DIO_STATE_0 | $DIO_1_STATE | $CRC8  | 0xDE   | 0xAD   |
+
 
 ## Example Command Sequences
 

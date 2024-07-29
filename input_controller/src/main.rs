@@ -3,14 +3,16 @@
 
 extern crate panic_halt;
 
-use arduino_hal::hal::port::{PA0, PA2, PA4, PA6, PC1, PC3, PC4, PC5, PC6, PC7, PE4, PJ0, PJ1};
-use arduino_hal::port;
-use arduino_hal::port::mode::PullUp;
+use arduino_hal::hal::port::{
+    PE4, PJ0, PJ1,
+};
 use arduino_hal::port::mode::{Input, Output};
 use arduino_hal::prelude::*;
+use arduino_hal::port;
 use max485::Max485;
 
-use hotline::hotline::create_command;
+use hotline::hotline_protocol::HotlineMessage;
+use ufmt::uWrite;
 
 #[arduino_hal::entry]
 fn main() -> ! {
@@ -61,222 +63,136 @@ fn main() -> ! {
 
     // Max485 initialization
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
+    usb.write_str("Serial Initialized").unwrap();
 
-    let sign_control_enabled = config_pin_enable_sign.is_high();
-    let mp_control_enabled = config_pin_enable_mp.is_high();
-
-    // Initial states for Sign
-    let mut previous_sign_state_all = sign_pin_all.is_high();
-    let mut previous_sign_states = [
-        sign_pin_input_1.is_high(),
-        sign_pin_input_2.is_high(),
-        sign_pin_input_3.is_high(),
-        sign_pin_input_4.is_high(),
-        sign_pin_input_5.is_high(),
-    ];
-
-    if mp_control_enabled
-    
-    {
-        // Initial states for MegaPoofer
-    let mut previous_mp_state_all = mp_pin_all.is_high();
-    let mut previous_mp_states = [
-        mp_pin_input_1.is_high(),
-        mp_pin_input_2.is_high(),
-        mp_pin_input_3.is_high(),
-    ];
-}
+    let mut sign_arm = false;
     let mut sign_pilot = false;
+    let sign_enable = config_pin_enable_sign.is_low();
+    if sign_enable {
+        usb.write_str("[Sign] Enabled\n").unwrap();
+    }
+
+    let mut mp_arm = false;
     let mut mp_pilot = false;
+    let mp_enable = config_pin_enable_mp.is_low();
+    if mp_enable {
+        usb.write_str("[MegaPoofer] Enabled\n").unwrap();
+    }
+
     loop {
         rs485.flush().unwrap();
+        if sign_enable {
+            if sign_pin_arm.is_low() {
+                if !sign_arm {
+                    usb.write_str("[Sign] Armed...\n").unwrap();
+                }
+                sign_arm = true;
 
-        if sign_control_enabled {
-            // Handle Sign pins
-            if sign_pin_arm.is_high() {
-                if sign_pin_pilot.is_high() {
+                let pilot = sign_pin_pilot.is_low();
+                if pilot {
                     if !sign_pilot {
-                        usb.write_str("Lighting Sign Pilot ...").unwrap();
-                        send_command(&mut rs485, 0x00, 0x05, 0x01).unwrap();
-                        sign_pilot = true;
+                        usb.write_str("[Sign] Lighting Pilot...\n").unwrap();
                     }
-                    check_and_send_sign_commands(
-                        &mut rs485,
-                        &sign_pin_all,
-                        &sign_pin_input_1,
-                        &sign_pin_input_2,
-                        &sign_pin_input_3,
-                        &sign_pin_input_4,
-                        &sign_pin_input_5,
-                        &mut previous_sign_state_all,
-                        &mut previous_sign_states,
-                    );
+                    sign_pilot = true;
                 } else {
                     if sign_pilot {
-                        usb.write_str("Turning off Sign Pilot ...").unwrap();
-                        send_command(&mut rs485, 0x00, 0x05, 0x00).unwrap();
-                        sign_pilot = false;
+                        usb.write_str("[Sign] Turning Off Pilot...\n").unwrap();
                     }
                 }
+
+                let all = sign_pin_all.is_low();
+
+                let mut states: [bool; 16] = [false; 16];
+                states[0] = pilot;
+                states[1] = sign_pin_input_1.is_low() || all;
+                states[2] = sign_pin_input_2.is_low() || all;
+                states[3] = sign_pin_input_3.is_low() || all;
+                states[4] = sign_pin_input_4.is_low() || all;
+                states[5] = sign_pin_input_5.is_low() || all;
+
+                match send_message(&mut rs485, HotlineMessage::new(0x00, states)) {
+                    Ok(()) => {}
+                    Err(()) => {
+                        usb.write_str("[Sign] Error Sending Hotline Message\n")
+                            .unwrap();
+                    }
+                }
+            } else {
+                if sign_arm {
+                    usb.write_str("[Sign] Disarmed...\n").unwrap();
+                }
+                sign_arm = false;
             }
         }
 
-        if mp_control_enabled {
-            // Handle MegaPoofer pins
-            if mp_pin_arm.is_high() {
-                if mp_pin_pilot.is_high() {
+        if mp_enable {
+            if mp_pin_arm.is_low() {
+                if !mp_arm {
+                    usb.write_str("[MegaPoofer] Armed...\n").unwrap();
+                }
+                mp_arm = true;
+
+                let pilot = mp_pin_pilot.is_low();
+                if pilot {
                     if !mp_pilot {
-                        usb.write_str("Lighting MegaPoofer Pilot ...").unwrap();
-                        send_command(&mut rs485, 0x01, 0x03, 0x01).unwrap();
-                        mp_pilot = true;
+                        usb.write_str("[MegaPoofer] Lighting Pilot...\n").unwrap();
                     }
-                    check_and_send_mp_commands(
-                        &mut rs485,
-                        &mp_pin_all,
-                        &mp_pin_input_1,
-                        &mp_pin_input_2,
-                        &mp_pin_input_3,
-                        &mut previous_mp_state_all,
-                        &mut previous_mp_states,
-                    );
+                    mp_pilot = true;
                 } else {
                     if mp_pilot {
-                        usb.write_str("Turning Off MegaPoofer Pilot ...").unwrap();
-                        send_command(&mut rs485, 0x01, 0x03, 0x00).unwrap();
-                        mp_pilot = false;
+                        usb.write_str("[MegaPoofer] Turning Off Pilot...\n")
+                            .unwrap();
                     }
                 }
+
+                let all = mp_pin_all.is_low();
+
+                let mut states: [bool; 16] = [false; 16];
+                states[0] = pilot;
+                states[1] = mp_pin_input_1.is_low() || all;
+                states[2] = mp_pin_input_2.is_low() || all;
+                states[3] = mp_pin_input_3.is_low() || all;
+
+                let msg = HotlineMessage::new(0x01, states);
+
+                match send_message(&mut rs485, msg) {
+                    Ok(()) => {
+                        usb.write_str("[MegaPoofer] Successfully Sent Hotline Message\n")
+                            .unwrap();
+                    }
+                    Err(counter) => {
+                        usb.write_str("[MegaPoofer] Error Sending Hotline Message\n")
+                            .unwrap();
+                        ufmt::uwrite!(usb,"Counter: {}\n", counter);
+                    }
+                }
+            } else {
+                if mp_arm {
+                    usb.write_str("[MegaPoofer] Disarmed...\n").unwrap();
+                }
+                mp_arm = false;
             }
         }
+        arduino_hal::delay_ms(1);
     }
-}
-
-fn check_and_send_sign_commands(
-    rs485: &mut Max485Type,
-    all_pin: &port::Pin<Input<PullUp>, PC6>,
-    solenoid_1_pin: &port::Pin<Input<PullUp>, PA0>,
-    solenoid_2_pin: &port::Pin<Input<PullUp>, PA2>,
-    solenoid_3_pin: &port::Pin<Input<PullUp>, PA4>,
-    solenoid_4_pin: &port::Pin<Input<PullUp>, PA6>,
-    solenoid_5_pin: &port::Pin<Input<PullUp>, PC7>,
-    previous_state_all: &mut bool,
-    previous_states: &mut [bool; 5],
-) {
-    // Check the state of the all pin
-    let current_state_all = all_pin.is_high();
-    if current_state_all && !*previous_state_all {
-        send_command(rs485, 0x00, 0xFF, 0x01).unwrap();
-        *previous_state_all = current_state_all;
-        return;
-    } else if !current_state_all && *previous_state_all {
-        send_command(rs485, 0x00, 0xFF, 0x00).unwrap();
-        *previous_state_all = current_state_all;
-        return;
-    }
-
-    let sol1 = solenoid_1_pin.is_high();
-    if sol1 != previous_states[1] {
-        send_command(rs485, 0x00, 0x00, 0x01).unwrap();
-    } else if solenoid_1_pin.is_low() != previous_states[1] {
-        send_command(rs485, 0x00, 0x00, 0x00).unwrap();
-    }
-    previous_states[1] = sol1;
-
-    let sol2 = solenoid_2_pin.is_high();
-    if sol2 != previous_states[2] {
-        send_command(rs485, 0x00, 0x01, 0x01).unwrap();
-    } else if solenoid_2_pin.is_low() != previous_states[2] {
-        send_command(rs485, 0x00, 0x01, 0x00).unwrap();
-    }
-    previous_states[2] = sol2;
-
-    let sol3 = solenoid_3_pin.is_high();
-    if sol3 != previous_states[3] {
-        send_command(rs485, 0x00, 0x02, 0x01).unwrap();
-    } else if solenoid_3_pin.is_low() != previous_states[3] {
-        send_command(rs485, 0x00, 0x02, 0x00).unwrap();
-    }
-    previous_states[3] = sol3;
-
-    let sol4 = solenoid_4_pin.is_high();
-    if sol4 != previous_states[4] {
-        send_command(rs485, 0x00, 0x03, 0x01).unwrap();
-    } else if solenoid_4_pin.is_low() != previous_states[4] {
-        send_command(rs485, 0x00, 0x03, 0x00).unwrap();
-    }
-    previous_states[4] = sol4;
-
-    let sol5 = solenoid_5_pin.is_high();
-    if sol5 != previous_states[5] {
-        send_command(rs485, 0x00, 0x04, 0x01).unwrap();
-    } else if solenoid_5_pin.is_low() != previous_states[5] {
-        send_command(rs485, 0x00, 0x04, 0x00).unwrap();
-    }
-    previous_states[5] = sol5;
-}
-
-fn check_and_send_mp_commands(
-    rs485: &mut Max485Type,
-    all_pin: &port::Pin<Input<PullUp>, PC4>,
-    solenoid_1_pin: &port::Pin<Input<PullUp>, PC5>,
-    solenoid_2_pin: &port::Pin<Input<PullUp>, PC3>,
-    solenoid_3_pin: &port::Pin<Input<PullUp>, PC1>,
-    previous_state_all: &mut bool,
-    previous_states: &mut [bool; 3],
-) {
-    // Check the state of the all pin
-    let current_state_all = all_pin.is_high();
-    if current_state_all && !*previous_state_all {
-        send_command(rs485, 0x01, 0xFF, 0x01).unwrap();
-        *previous_state_all = current_state_all;
-        return;
-    } else if !current_state_all && *previous_state_all {
-        send_command(rs485, 0x01, 0xFF, 0x00).unwrap();
-        *previous_state_all = current_state_all;
-        return;
-    }
-
-    let sol1 = solenoid_1_pin.is_high();
-    if sol1 != previous_states[1] {
-        send_command(rs485, 0x01, 0x00, 0x01).unwrap();
-    } else if solenoid_1_pin.is_low() != previous_states[1] {
-        send_command(rs485, 0x01, 0x00, 0x00).unwrap();
-    }
-    previous_states[1] = sol1;
-
-    let sol2 = solenoid_2_pin.is_high();
-    if sol2 != previous_states[2] {
-        send_command(rs485, 0x01, 0x01, 0x01).unwrap();
-    } else if solenoid_2_pin.is_low() != previous_states[2] {
-        send_command(rs485, 0x01, 0x01, 0x00).unwrap();
-    }
-    previous_states[2] = sol2;
-
-    let sol3 = solenoid_3_pin.is_high();
-    if sol3 != previous_states[3] {
-        send_command(rs485, 0x01, 0x02, 0x01).unwrap();
-    } else if solenoid_3_pin.is_low() != previous_states[3] {
-        send_command(rs485, 0x01, 0x02, 0x00).unwrap();
-    }
-    previous_states[3] = sol3;
 }
 
 type UsartType =
     arduino_hal::Usart<arduino_hal::pac::USART3, port::Pin<Input, PJ0>, port::Pin<Output, PJ1>>;
 type Max485Type = Max485<UsartType, port::Pin<Output, PE4>>;
 
-fn send_command(serial: &mut Max485Type, device_id: u8, dio_id: u8, state: u8) -> Result<(), ()> {
-    // Create command
-    let command = create_command(device_id, dio_id, state);
-
-    // Send command bytes
-    for byte in &command {
-        match serial.write(*byte) {
+fn send_message(serial: &mut Max485Type, msg: HotlineMessage) -> Result<(), ()> {
+    let cmd = msg.to_bytes();
+    let mut counter = 0;
+    for byte in cmd {
+        match serial.write(byte) {
             Ok(()) => {}
-            Err(_) => return Err(()),
+            Err(()) => {
+                return Err(());
+            }
         };
-        arduino_hal::delay_us(100);
+        arduino_hal::delay_us(20);
+        counter += 1;
     }
-
     Ok(())
 }
