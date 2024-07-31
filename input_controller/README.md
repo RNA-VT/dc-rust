@@ -8,12 +8,12 @@ Controller for MindShark's Sign and MegaPoofer
 |--------------|-------------------|------------------|-----------|-------------------|--------|------------|--------------------|------------------------------------------|
 |              |                   |                  |           |                   |        |            |                    |                                          |
 | Sign         | Arm Sign          | Covered Switch   | D38       | --                | --     | --         | --                 | Enable Sending of Commands to Sign       |
-| Sign         | Pilot             | Covered Switch   | D40       | 0x00              | 0x05   | D22        | 1                  | Pilot solenoid and glowflys              |
-| Sign         | Solenoid 1        | Momentary Switch | D22       | 0x00              | 0x00   | D24        | 2                  |                                          |
-| Sign         | Solenoid 2        | Momentary Switch | D24       | 0x00              | 0x01   | D26        | 3                  |                                          |
-| Sign         | Solenoid 3        | Momentary Switch | D26       | 0x00              | 0x02   | D28        | 4                  |                                          |
-| Sign         | Solenoid 4        | Momentary Switch | D28       | 0x00              | 0x03   | D30        | 5                  |                                          |
-| Sign         | Solenoid 5        | Momentary Switch | D30       | 0x00              | 0x04   | D32        | 6                  |                                          |
+| Sign         | Pilot             | Covered Switch   | D40       | 0x00              | 0x00   | D22        | 1                  | Pilot solenoid and glowflys              |
+| Sign         | Solenoid 1        | Momentary Switch | D22       | 0x00              | 0x01   | D24        | 2                  |                                          |
+| Sign         | Solenoid 2        | Momentary Switch | D24       | 0x00              | 0x02   | D26        | 3                  |                                          |
+| Sign         | Solenoid 3        | Momentary Switch | D26       | 0x00              | 0x03   | D28        | 4                  |                                          |
+| Sign         | Solenoid 4        | Momentary Switch | D28       | 0x00              | 0x04   | D30        | 5                  |                                          |
+| Sign         | Solenoid 5        | Momentary Switch | D30       | 0x00              | 0x05   | D32        | 6                  |                                          |
 | Sign         | All               | Momentary Switch | D31       | 0x00              | 0xFF   | --         | --                 | Set all solenoid states                  |
 |              |                   |                  |           |                   |        |            |                    |                                          |
 | MegaPoofer   | Arm Sign          | Covered Switch   | D42       | --                | --     | --         | --                 | Enable Sending of Commands to MegaPoofer |
