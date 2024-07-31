@@ -1,7 +1,7 @@
 Hotline Output Controller
 ==========
 
-This project controls up to 13 digital outputs through received Hotline RS485 communication.
+This project controls up to 8 digital outputs through received Hotline RS485 communication.
 
 ## Build Instructions
 1. Install prerequisites as described in the [`avr-hal` README] (`avr-gcc`, `avr-libc`, `avrdude`, [`ravedude`]).
