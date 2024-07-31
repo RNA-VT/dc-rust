@@ -3,12 +3,10 @@
 
 extern crate panic_halt;
 
-use arduino_hal::hal::port::{
-    PE4, PJ0, PJ1,
-};
+use arduino_hal::hal::port::{PE4, PJ0, PJ1};
+use arduino_hal::port;
 use arduino_hal::port::mode::{Input, Output};
 use arduino_hal::prelude::*;
-use arduino_hal::port;
 use max485::Max485;
 
 use hotline::hotline_protocol::HotlineMessage;
@@ -94,10 +92,9 @@ fn main() -> ! {
                         usb.write_str("[Sign] Lighting Pilot...\n").unwrap();
                     }
                     sign_pilot = true;
-                } else {
-                    if sign_pilot {
-                        usb.write_str("[Sign] Turning Off Pilot...\n").unwrap();
-                    }
+                } else if sign_pilot {
+                    usb.write_str("[Sign] Turning Off Pilot...\n").unwrap();
+                    sign_pilot = false;
                 }
 
                 let all = sign_pin_all.is_low();
@@ -138,11 +135,10 @@ fn main() -> ! {
                         usb.write_str("[MegaPoofer] Lighting Pilot...\n").unwrap();
                     }
                     mp_pilot = true;
-                } else {
-                    if mp_pilot {
-                        usb.write_str("[MegaPoofer] Turning Off Pilot...\n")
-                            .unwrap();
-                    }
+                } else if mp_pilot {
+                    usb.write_str("[MegaPoofer] Turning Off Pilot...\n")
+                        .unwrap();
+                    mp_pilot = false;
                 }
 
                 let all = mp_pin_all.is_low();
@@ -157,7 +153,10 @@ fn main() -> ! {
 
                 match send_message(&mut rs485, msg) {
                     Ok(()) => {}
-                    Err(()) => {}
+                    Err(()) => {
+                        usb.write_str("[MegaPoofer] Error Sending Hotline Message\n")
+                            .unwrap();
+                    }
                 }
             } else {
                 if mp_arm {

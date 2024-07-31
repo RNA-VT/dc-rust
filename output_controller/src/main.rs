@@ -32,7 +32,6 @@ fn main() -> ! {
     let mut pin_output_5 = pins.d32.into_output();
     let mut pin_output_6 = pins.d34.into_output();
     let mut pin_output_7 = pins.d36.into_output();
-    
 
     // RS485 digital output pin
     let mut pin_rs485_enable = pins.d2.into_output();
@@ -58,14 +57,14 @@ fn main() -> ! {
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
     usb.write_str("Serial Initialized\n").unwrap();
 
-    let mut states: [bool; 4] = [false; 4];
+    let mut states: [bool; 8] = [false; 8];
     loop {
         // Read a byte from the serial connection
         match receive_command(&mut rs485, &mut usb) {
             Some(msg) => {
                 let device_id = msg.device_id;
                 // 0x00 - Sign, 0x01 - MegaPoofer, 0xFF - All outputs
-                if device_id == 0x01 || device_id == 0x00 || device_id == 0xFF  {
+                if device_id == 0x01 || device_id == 0x00 || device_id == 0xFF {
                     if let Some(state) = msg.get_dio_state(0) {
                         if state != states[0] {
                             if state {
@@ -174,13 +173,14 @@ fn main() -> ! {
                         }
                     }
                 }
-                    usb.write_str("Received command - ").unwrap();
-                    ufmt::uwrite!(
-                        usb,
-                        "Device ID: {:X}, States: {:?}\n",
-                        msg.device_id,
-                        states,
-                    ).unwrap();
+                usb.write_str("Received command - ").unwrap();
+                ufmt::uwrite!(
+                    usb,
+                    "Device ID: {:X}, States: {:?}\n",
+                    msg.device_id,
+                    states,
+                )
+                .unwrap();
             }
             _ => {
                 usb.write_str("Failed to parse command.\n").unwrap();
