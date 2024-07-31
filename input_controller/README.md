@@ -7,8 +7,6 @@ Controller for MindShark's Sign and MegaPoofer
 | Installation | Controlled Device | Control          | Input Pin | Hotline Device ID | DIO ID | Output Pin | Relay Input/Output | Notes                                    |
 |--------------|-------------------|------------------|-----------|-------------------|--------|------------|--------------------|------------------------------------------|
 |              |                   |                  |           |                   |        |            |                    |                                          |
-| General      | Chaos             | Covered Switch   | D35       | --                | --     | --         | --                 | Activate Chaos Input Mode                |
-|              |                   |                  |           |                   |        |            |                    |                                          |
 | Sign         | Arm Sign          | Covered Switch   | D38       | --                | --     | --         | --                 | Enable Sending of Commands to Sign       |
 | Sign         | Pilot             | Covered Switch   | D40       | 0x00              | 0x05   | D22        | 1                  | Pilot solenoid and glowflys              |
 | Sign         | Solenoid 1        | Momentary Switch | D22       | 0x00              | 0x00   | D24        | 2                  |                                          |
