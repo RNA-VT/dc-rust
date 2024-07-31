@@ -156,15 +156,8 @@ fn main() -> ! {
                 let msg = HotlineMessage::new(0x01, states);
 
                 match send_message(&mut rs485, msg) {
-                    Ok(()) => {
-                        usb.write_str("[MegaPoofer] Successfully Sent Hotline Message\n")
-                            .unwrap();
-                    }
-                    Err(counter) => {
-                        usb.write_str("[MegaPoofer] Error Sending Hotline Message\n")
-                            .unwrap();
-                        ufmt::uwrite!(usb,"Counter: {}\n", counter);
-                    }
+                    Ok(()) => {}
+                    Err(()) => {}
                 }
             } else {
                 if mp_arm {
@@ -183,16 +176,14 @@ type Max485Type = Max485<UsartType, port::Pin<Output, PE4>>;
 
 fn send_message(serial: &mut Max485Type, msg: HotlineMessage) -> Result<(), ()> {
     let cmd = msg.to_bytes();
-    let mut counter = 0;
     for byte in cmd {
         match serial.write(byte) {
             Ok(()) => {}
-            Err(()) => {
+            Err(_) => {
                 return Err(());
             }
         };
         arduino_hal::delay_us(20);
-        counter += 1;
     }
     Ok(())
 }
