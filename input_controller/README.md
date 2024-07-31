@@ -4,24 +4,24 @@ Hotline Digital Input Controller
 Controller for MindShark's Sign and MegaPoofer
 # 
 
-| Installation | Controlled Device | Control          | Input Pin | Hotline Device ID | DIO ID | Output Pin | Relay Input/Output | Notes                                    |
-|--------------|-------------------|------------------|-----------|-------------------|--------|------------|--------------------|------------------------------------------|
-|              |                   |                  |           |                   |        |            |                    |                                          |
-| Sign         | Arm Sign          | Covered Switch   | D38       | --                | --     | --         | --                 | Enable Sending of Commands to Sign       |
-| Sign         | Pilot             | Covered Switch   | D40       | 0x00              | 0x00   | D22        | 1                  | Pilot solenoid and glowflys              |
-| Sign         | Solenoid 1        | Momentary Switch | D22       | 0x00              | 0x01   | D24        | 2                  | Far Left                                 |
-| Sign         | Solenoid 2        | Momentary Switch | D24       | 0x00              | 0x02   | D26        | 3                  | Mid Left                                 |
-| Sign         | Solenoid 3        | Momentary Switch | D26       | 0x00              | 0x03   | D28        | 4                  | Center                                   |
-| Sign         | Solenoid 4        | Momentary Switch | D28       | 0x00              | 0x04   | D30        | 5                  | Mid Right                                |
-| Sign         | Solenoid 5        | Momentary Switch | D30       | 0x00              | 0x05   | D32        | 6                  | Far Right                                |
-| Sign         | All               | Momentary Switch | D31       | 0x00              | 0xFF   | --         | --                 | Set all solenoid states                  |
-|              |                   |                  |           |                   |        |            |                    |                                          |
-| MegaPoofer   | Arm Sign          | Covered Switch   | D42       | --                | --     | --         | --                 | Enable Sending of Commands to MegaPoofer |
-| MegaPoofer   | Pilot             | Covered Switch   | D44       | 0x01              | 0x00   | D22        | 1                  | Pilot solenoid and glowflys              |
-| MegaPoofer   | Solenoid 1        | Momentary Switch | D32       | 0x01              | 0x01   | D24        | 2                  |                                          |
-| MegaPoofer   | Solenoid 2        | Momentary Switch | D34       | 0x01              | 0x02   | D26        | 3                  |                                          |
-| MegaPoofer   | Solenoid 3        | Momentary Switch | D36       | 0x01              | 0x03   | D28        | 4                  |                                          |
-| MegaPoofer   | All               | Momentary Switch | D33       | 0x01              | 0xFF   | --         | --                 | Set all solenoid states                  |
+| Installation | Controlled Device | Control          | Input Pin | Hotline Device ID | DIO ID | Output Pin | Relay IN | Relay NO   | Relay COM | Solenoid A | Solenoid B | Notes                                    |
+|--------------|-------------------|------------------|-----------|-------------------|--------|------------|----------|------------|-----------|------------|------------|------------------------------------------|
+|              |                   |                  |           |                   |        |            |          |            |           |            |            |                                          |
+| Sign         | Arm Sign          | Covered Switch   | D38       | --                | --     | --         | --       |            |           |            |            | Enable Sending of Commands to Sign       |
+| Sign         | Pilot             | Covered Switch   | D40       | 0x00              | 0x00   | D22        | 1        | Solenoid A | +120v     | Relay NO   | -120v      | Pilot solenoid and glowflys              |
+| Sign         | Solenoid 1        | Momentary Switch | D22       | 0x00              | 0x01   | D24        | 2        | Solenoid A | +120v     | Relay NO   | -120v      | Far Left                                 |
+| Sign         | Solenoid 2        | Momentary Switch | D24       | 0x00              | 0x02   | D26        | 3        | Solenoid A | +120v     | Relay NO   | -120v      | Mid Left                                 |
+| Sign         | Solenoid 3        | Momentary Switch | D26       | 0x00              | 0x03   | D28        | 4        | Solenoid A | +120v     | Relay NO   | -120v      | Center                                   |
+| Sign         | Solenoid 4        | Momentary Switch | D28       | 0x00              | 0x04   | D30        | 5        | Solenoid A | +120v     | Relay NO   | -120v      | Mid Right                                |
+| Sign         | Solenoid 5        | Momentary Switch | D30       | 0x00              | 0x05   | D32        | 6        | Solenoid A | +120v     | Relay NO   | -120v      | Far Right                                |
+| Sign         | All               | Momentary Switch | D31       | 0x00              | 0xFF   | --         | --       |            |           |            |            | Set all solenoid states                  |
+|              |                   |                  |           |                   |        |            |          |            |           |            |            |                                          |
+| MegaPoofer   | Arm Sign          | Covered Switch   | D42       | --                | --     | --         | --       |            |           |            |            | Enable Sending of Commands to MegaPoofer |
+| MegaPoofer   | Pilot             | Covered Switch   | D44       | 0x01              | 0x00   | D22        | 1        | Solenoid A | +12v      | Relay NO   | GND        | Pilot solenoid and glowflys              |
+| MegaPoofer   | Solenoid 1        | Momentary Switch | D32       | 0x01              | 0x01   | D24        | 2        | Solenoid A | +12v      | Relay NO   | GND        |                                          |
+| MegaPoofer   | Solenoid 2        | Momentary Switch | D34       | 0x01              | 0x02   | D26        | 3        | Solenoid A | +12v      | Relay NO   | GND        |                                          |
+| MegaPoofer   | Solenoid 3        | Momentary Switch | D36       | 0x01              | 0x03   | D28        | 4        | Solenoid A | +12v      | Relay NO   | GND        |                                          |
+| MegaPoofer   | All               | Momentary Switch | D33       | 0x01              | 0xFF   | --         | --       |            |           | Relay NO   | GND        | Set all solenoid states                  |
 
 
 ## Build Instructions
