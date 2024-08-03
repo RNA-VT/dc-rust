@@ -17,9 +17,9 @@ Controller for MindShark's Sign and MegaPoofer
 |              |                   |                  |                  |                 |               |                    |                   |        |            |          |            |           |            |            |                                          |
 | MegaPoofer   | Pilot             | Toggle Switch    | --               | GND             | GND           | D12                | 0x01              | 0x00   | D12        | 1        | Solenoid A | +12v      | Relay NO   | GND        | Pilot solenoid and glowflys              |
 | MegaPoofer   | All               | Momentary Switch | +5v              | GND             | GND           | D8                 | 0x01              | --     | --         | --       |            |           | Relay NO   | GND        | Set all solenoid states                  |
-| MegaPoofer   | Solenoid 1        | Momentary Switch | +5v              | GND             | GND           | D9                 | 0x01              | 0x01   | D9         | 2        | Solenoid A | +12v      | Relay NO   | GND        |                                          |
-| MegaPoofer   | Solenoid 2        | Momentary Switch | +5v              | GND             | GND           | D10                | 0x01              | 0x02   | D10        | 3        | Solenoid A | +12v      | Relay NO   | GND        |                                          |
-| MegaPoofer   | Solenoid 3        | Momentary Switch | +5v              | GND             | GND           | D13                | 0x01              | 0x03   | D13        | 4        | Solenoid A | +12v      | Relay NO   | GND        |                                          |
+| MegaPoofer   | Solenoid 1        | Momentary Switch | +5v              | GND             | GND           | D9                 | 0x01              | 0x01   | D7         | 2        | Solenoid A | +12v      | Relay NO   | GND        |                                          |
+| MegaPoofer   | Solenoid 2        | Momentary Switch | +5v              | GND             | GND           | D10                | 0x01              | 0x02   | D8         | 3        | Solenoid A | +12v      | Relay NO   | GND        |                                          |
+| MegaPoofer   | Solenoid 3        | Momentary Switch | +5v              | GND             | GND           | D13                | 0x01              | 0x03   | D9         | 4        | Solenoid A | +12v      | Relay NO   | GND        |                                          |
 
 
 ## Build Instructions
