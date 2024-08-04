@@ -24,20 +24,30 @@ fn main() -> ! {
     let dp = arduino_hal::Peripherals::take().unwrap();
 
     let pins = arduino_hal::pins!(dp);
-    let mut pin_output_0 = pins.d22.into_output();
-    let mut pin_output_1 = pins.d24.into_output();
-    let mut pin_output_2 = pins.d26.into_output();
-    let mut pin_output_3 = pins.d28.into_output();
-    let mut pin_output_4 = pins.d30.into_output();
-    let mut pin_output_5 = pins.d32.into_output();
-    let mut pin_output_6 = pins.d34.into_output();
-    let mut pin_output_7 = pins.d36.into_output();
+    let mut pin_output_0 = pins.d12.into_output();
+    let mut pin_output_1 = pins.d7.into_output();
+    let mut pin_output_2 = pins.d8.into_output();
+    let mut pin_output_3 = pins.d9.into_output();
+    let mut pin_output_4 = pins.d10.into_output();
+    let mut pin_output_5 = pins.d13.into_output();
+    let mut pin_output_6 = pins.d5.into_output();
+    let mut pin_output_7 = pins.d6.into_output();
+
+    // turn off all outputs
+    pin_output_0.set_high();
+    pin_output_1.set_high();
+    pin_output_2.set_high();
+    pin_output_3.set_high();
+    pin_output_4.set_high();
+    pin_output_5.set_high();
+    pin_output_6.set_high();
+    pin_output_7.set_high();
 
     // RS485 digital output pin
     let mut pin_rs485_enable = pins.d2.into_output();
-    pin_rs485_enable.set_low();
+    pin_rs485_enable.set_high(); //tested
 
-    // Initialize USB serial for debugging
+    // USB
     let mut usb = arduino_hal::Usart::new(
         dp.USART0,
         pins.d0,
@@ -45,7 +55,7 @@ fn main() -> ! {
         arduino_hal::hal::usart::BaudrateArduinoExt::into_baudrate(57600), // USB
     );
 
-    // Initialize RS485 serial communication
+    // RS485
     let serial = arduino_hal::Usart::new(
         dp.USART3,
         pins.d15,
@@ -53,26 +63,25 @@ fn main() -> ! {
         arduino_hal::hal::usart::BaudrateArduinoExt::into_baudrate(460800), // RS485
     );
 
-    // Max485 initialization
+    // Max485 crate
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
     usb.write_str("Serial Initialized\n").unwrap();
 
     let mut states: [bool; 8] = [false; 8];
+
     loop {
-        // Read a byte from the serial connection
         match receive_command(&mut rs485, &mut usb) {
             Some(msg) => {
                 let device_id = msg.device_id;
+                usb.write_str("Message received\n").unwrap();
                 // 0x00 - Sign, 0x01 - MegaPoofer, 0xFF - All outputs
                 if device_id == 0x01 || device_id == 0x00 || device_id == 0xFF {
                     if let Some(state) = msg.get_dio_state(0) {
                         if state != states[0] {
                             if state {
-                                usb.write_str("Output 0 High\n").unwrap();
-                                pin_output_0.set_high();
-                            } else {
-                                usb.write_str("Output 0 Low\n").unwrap();
                                 pin_output_0.set_low();
+                            } else {
+                                pin_output_0.set_high();
                             }
                             states[0] = state;
                         }
@@ -81,11 +90,9 @@ fn main() -> ! {
                     if let Some(state) = msg.get_dio_state(1) {
                         if state != states[1] {
                             if state {
-                                usb.write_str("Output 1 High\n").unwrap();
-                                pin_output_1.set_high();
-                            } else {
-                                usb.write_str("Output 1 Low\n").unwrap();
                                 pin_output_1.set_low();
+                            } else {
+                                pin_output_1.set_high();
                             }
                             states[1] = state;
                         }
@@ -94,11 +101,9 @@ fn main() -> ! {
                     if let Some(state) = msg.get_dio_state(2) {
                         if state != states[2] {
                             if state {
-                                usb.write_str("Output 2 High\n").unwrap();
-                                pin_output_2.set_high();
-                            } else {
-                                usb.write_str("Output 2 Low\n").unwrap();
                                 pin_output_2.set_low();
+                            } else {
+                                pin_output_2.set_high();
                             }
                             states[2] = state;
                         }
@@ -107,26 +112,21 @@ fn main() -> ! {
                     if let Some(state) = msg.get_dio_state(3) {
                         if state != states[3] {
                             if state {
-                                usb.write_str("Output 3 High\n").unwrap();
-                                pin_output_3.set_high();
-                            } else {
-                                usb.write_str("Output 3 Low\n").unwrap();
                                 pin_output_3.set_low();
+                            } else {
+                                pin_output_3.set_high();
                             }
                             states[3] = state;
                         }
                     }
                 }
-
                 if device_id == 0x00 || device_id == 0xFF {
                     if let Some(state) = msg.get_dio_state(4) {
                         if state != states[4] {
                             if state {
-                                usb.write_str("Output 4 High\n").unwrap();
-                                pin_output_4.set_high();
-                            } else {
-                                usb.write_str("Output 4 Low\n").unwrap();
                                 pin_output_4.set_low();
+                            } else {
+                                pin_output_4.set_high();
                             }
                             states[4] = state;
                         }
@@ -135,26 +135,21 @@ fn main() -> ! {
                     if let Some(state) = msg.get_dio_state(5) {
                         if state != states[5] {
                             if state {
-                                usb.write_str("Output 5 High\n").unwrap();
-                                pin_output_5.set_high();
-                            } else {
-                                usb.write_str("Output 5 Low\n").unwrap();
                                 pin_output_5.set_low();
+                            } else {
+                                pin_output_5.set_high();
                             }
                             states[5] = state;
                         }
                     }
                 }
-
                 if device_id == 0xFF {
                     if let Some(state) = msg.get_dio_state(6) {
                         if state != states[6] {
                             if state {
-                                usb.write_str("Output 6 High\n").unwrap();
-                                pin_output_6.set_high();
-                            } else {
-                                usb.write_str("Output 6 Low\n").unwrap();
                                 pin_output_6.set_low();
+                            } else {
+                                pin_output_6.set_high();
                             }
                             states[6] = state;
                         }
@@ -163,24 +158,21 @@ fn main() -> ! {
                     if let Some(state) = msg.get_dio_state(7) {
                         if state != states[7] {
                             if state {
-                                usb.write_str("Output 7 High\n").unwrap();
-                                pin_output_7.set_high();
-                            } else {
-                                usb.write_str("Output 7 Low\n").unwrap();
                                 pin_output_7.set_low();
+                            } else {
+                                pin_output_7.set_high();
                             }
                             states[7] = state;
                         }
                     }
                 }
-                usb.write_str("Received command - ").unwrap();
-                ufmt::uwrite!(
-                    usb,
-                    "Device ID: {:X}, States: {:?}\n",
-                    msg.device_id,
-                    states,
-                )
-                .unwrap();
+                // ufmt::uwrite!(
+                //     usb,
+                //     "Device ID: {:X}, States: {:?}\n",
+                //     msg.device_id,
+                //     states,
+                // )
+                // .unwrap();
             }
             _ => {
                 usb.write_str("Failed to parse command.\n").unwrap();
@@ -198,6 +190,7 @@ fn receive_command(
 
     loop {
         let byte = nb::block!(serial.read()).unwrap();
+        // ufmt::uwrite!(usb, "Byte Received: {:X}\n", byte).unwrap();
         // Wait for the start delimiter
         if (index == 0 && byte == 0xBE) || (index == 1 && buffer[0] == 0xBE && byte == 0xEF) {
             buffer[index] = byte;
@@ -230,6 +223,7 @@ fn receive_command(
                 buffer = [0u8; 8];
             }
         } else {
+            usb.write_str("Stream Parse Fail\n").unwrap();
             index = 0;
             buffer = [0u8; 8];
         }

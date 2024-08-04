@@ -3,12 +3,15 @@
 
 extern crate panic_halt;
 
-use arduino_hal::hal::port::{PB4, PB6, PB7, PE4, PH3, PH4, PH5, PH6, PJ0, PJ1};
+use core::fmt::Write;
+use arduino_hal::hal::port::{PB4, PB6, PB7, PE4, PH3, PH4, PH5, PH6, PJ0, PJ1, PE0, PE1};
 use arduino_hal::port;
 use arduino_hal::port::mode::{Input, Output, PullUp};
 use arduino_hal::port::Pin;
 use arduino_hal::prelude::*;
 use max485::Max485;
+use arduino_hal::pac::USART0;
+use arduino_hal::Usart;
 
 use hotline::hotline_protocol::HotlineMessage;
 use ufmt::uWrite;
@@ -22,7 +25,7 @@ fn main() -> ! {
     let mut pin_rs485_enable = pins.d2.into_output();
     pin_rs485_enable.set_high();
 
-    // Initialize USB serial for debugging
+    // USB
     let mut usb = arduino_hal::Usart::new(
         dp.USART0,
         pins.d0,
@@ -30,7 +33,7 @@ fn main() -> ! {
         arduino_hal::hal::usart::BaudrateArduinoExt::into_baudrate(57600), // USB
     );
 
-    // Initialize RS485 serial communication
+    // RS485
     let serial = arduino_hal::Usart::new(
         dp.USART3,
         pins.d15,
@@ -38,7 +41,7 @@ fn main() -> ! {
         arduino_hal::hal::usart::BaudrateArduinoExt::into_baudrate(460800), // RS485
     );
 
-    // Max485 initialization
+    // Max485 crate
     let mut rs485 = Max485::new(serial, pin_rs485_enable);
     usb.write_str("Serial Initialized").unwrap();
 
@@ -95,38 +98,19 @@ fn main() -> ! {
             states[0] = pilot;
             states[1] = sign_pin_input_1.is_low() || all;
             states[1] = sign_pin_input_1.is_low() || all;
-            if states[1] {
-                usb.write_str("1 Pressed").unwrap();
-            }
             states[2] = sign_pin_input_2.is_low() || all;
-
-            if states[2] {
-                usb.write_str("2 Pressed").unwrap();
-            }
             states[3] = sign_pin_input_3.is_low() || all;
-
-            if states[3] {
-                usb.write_str("3 Pressed").unwrap();
-            }
             states[4] = sign_pin_input_4.is_low() || all;
-
-            if states[4] {
-                usb.write_str("4 Pressed").unwrap();
-            }
             states[5] = sign_pin_input_5.is_low() || all;
 
-            if states[5] {
-                usb.write_str("5 Pressed").unwrap();
-            }
-
-            match send_message(&mut rs485, HotlineMessage::new(0x00, states)) {
+            match send_message(&mut rs485, HotlineMessage::new(0x00, states), &mut usb) {
                 Ok(()) => {}
                 Err(()) => {
                     usb.write_str("[Sign] Error Sending Hotline Message\n")
                         .unwrap();
                 }
             }
-            arduino_hal::delay_ms(1);
+            arduino_hal::delay_ms(10);
         }
     } else if mp_enable && !sign_enable {
         usb.write_str("[MegaPoofer] Enabled\n").unwrap();
@@ -151,35 +135,22 @@ fn main() -> ! {
 
             let all = mp_pin_all.is_low();
 
-            if all {
-                usb.write_str("All Pressed.").unwrap();
-            }
-
             let mut states: [bool; 16] = [false; 16];
             states[0] = pilot;
             states[1] = mp_pin_input_1.is_low() || all;
-            if states[1] {
-                usb.write_str("1 Pressed").unwrap();
-            }
             states[2] = mp_pin_input_2.is_low() || all;
-            if states[2] {
-                usb.write_str("2 Pressed").unwrap();
-            }
             states[3] = mp_pin_input_3.is_low() || all;
-            if states[3] {
-                usb.write_str("3 Pressed").unwrap();
-            }
 
             let msg = HotlineMessage::new(0x01, states);
 
-            match send_message(&mut rs485, msg) {
+            match send_message(&mut rs485, msg,&mut usb) {
                 Ok(()) => {}
                 Err(()) => {
                     usb.write_str("[MegaPoofer] Error Sending Hotline Message\n")
                         .unwrap();
                 }
             }
-            arduino_hal::delay_ms(1);
+            arduino_hal::delay_ms(10);
         }
     } else if sign_enable && mp_enable {
         panic!("This controller cannot function as both an MegaPoofer input and a sign input. please ground only 1 of pin 3 or 4 to select sign or MegaPoofer.");
@@ -192,16 +163,19 @@ type UsartType =
     arduino_hal::Usart<arduino_hal::pac::USART3, port::Pin<Input, PJ0>, port::Pin<Output, PJ1>>;
 type Max485Type = Max485<UsartType, port::Pin<Output, PE4>>;
 
-fn send_message(serial: &mut Max485Type, msg: HotlineMessage) -> Result<(), ()> {
+fn send_message(serial: &mut Max485Type, msg: HotlineMessage, usb: &mut Usart<USART0, Pin<Input, PE0>, Pin<Output, PE1>>,) -> Result<(), ()> {
     let cmd = msg.to_bytes();
     for byte in cmd {
         match serial.write(byte) {
-            Ok(()) => {}
+            Ok(()) => {
+                // ufmt::uwrite!(usb, "byte sent: {:X}\n", byte);
+            }
             Err(_) => {
+                usb.write_str("[RS485] Failed to send byte.");
                 return Err(());
             }
         };
-        arduino_hal::delay_us(20);
+        arduino_hal::delay_ms(3);
     }
     Ok(())
 }
