@@ -16,14 +16,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        crate: ["relay", "wifi", "dc"]
+        crate: ["relay", "wifi", "dc", "input_controller", "output_controller"]
         action:
-#          - command: check
-#            args: --target=xtensa-esp32-espidf --release
+          - command: check
+            args: --release
           - command: fmt
             args: --all -- --check --color always
-#          - command: clippy
-#            args: --target=xtensa-esp32-espidf --all-features --workspace -- -D warnings
+          - command: clippy
+            args: --all-features --workspace
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,7 +37,9 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: "relay/ -> target
-          wifi/ -> target"
+          wifi/ -> target
+          input_controller/ -> target
+          output_controller/ -> target
       - name: Xtensa rustup target
         run: espup install
       - name: Source espup script
