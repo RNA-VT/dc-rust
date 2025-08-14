@@ -29,7 +29,7 @@ fn main() -> ! {
     let mut pin_output_2 = pins.d8.into_output();
     let mut pin_output_3 = pins.d9.into_output();
     let mut pin_output_4 = pins.d10.into_output();
-    let mut pin_output_5 = pins.d13.into_output();
+    let mut pin_output_5 = pins.d11.into_output();
     let mut pin_output_6 = pins.d5.into_output();
     let mut pin_output_7 = pins.d6.into_output();
 
@@ -135,8 +135,10 @@ fn main() -> ! {
                     if let Some(state) = msg.get_dio_state(5) {
                         if state != states[5] {
                             if state {
+                                usb.write_str("Output High").unwrap();
                                 pin_output_5.set_low();
                             } else {
+                                usb.write_str("Output Low").unwrap();
                                 pin_output_5.set_high();
                             }
                             states[5] = state;
@@ -166,13 +168,13 @@ fn main() -> ! {
                         }
                     }
                 }
-                // ufmt::uwrite!(
-                //     usb,
-                //     "Device ID: {:X}, States: {:?}\n",
-                //     msg.device_id,
-                //     states,
-                // )
-                // .unwrap();
+                ufmt::uwrite!(
+                    usb,
+                    "Device ID: {:X}, States: {:?}\n",
+                    msg.device_id,
+                    states,
+                )
+                .unwrap();
             }
             _ => {
                 usb.write_str("Failed to parse command.\n").unwrap();
@@ -190,7 +192,7 @@ fn receive_command(
 
     loop {
         let byte = nb::block!(serial.read()).unwrap();
-        // ufmt::uwrite!(usb, "Byte Received: {:X}\n", byte).unwrap();
+        ufmt::uwrite!(usb, "Byte Received: {:X}\n", byte).unwrap();
         // Wait for the start delimiter
         if (index == 0 && byte == 0xBE) || (index == 1 && buffer[0] == 0xBE && byte == 0xEF) {
             buffer[index] = byte;

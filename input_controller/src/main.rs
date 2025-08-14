@@ -18,6 +18,7 @@ use ufmt::uWrite;
 
 #[arduino_hal::entry]
 fn main() -> ! {
+    arduino_hal::delay_ms(10);
     let dp = arduino_hal::Peripherals::take().unwrap();
     let pins = arduino_hal::pins!(dp);
 
@@ -70,7 +71,9 @@ fn main() -> ! {
     let sign_enable = config_pin_enable_sign.is_low();
     let mp_enable = config_pin_enable_mp.is_low();
 
-    if sign_enable && !mp_enable {
+    usb.write_str("HERE\n").unwrap();
+
+    // if sign_enable && !mp_enable {
         usb.write_str("[Sign] Enabled\n").unwrap();
         sign_pin_all = pins.d6.into_pull_up_input();
         sign_pin_input_1 = pins.d7.into_pull_up_input();
@@ -103,6 +106,7 @@ fn main() -> ! {
             states[4] = sign_pin_input_4.is_low() || all;
             states[5] = sign_pin_input_5.is_low() || all;
 
+
             match send_message(&mut rs485, HotlineMessage::new(0x00, states), &mut usb) {
                 Ok(()) => {}
                 Err(()) => {
@@ -110,53 +114,56 @@ fn main() -> ! {
                         .unwrap();
                 }
             }
-            arduino_hal::delay_ms(10);
+            arduino_hal::delay_ms(20);
         }
-    } else if mp_enable && !sign_enable {
-        usb.write_str("[MegaPoofer] Enabled\n").unwrap();
-        mp_pin_all = pins.d8.into_pull_up_input();
-        mp_pin_input_1 = pins.d9.into_pull_up_input();
-        mp_pin_input_2 = pins.d10.into_pull_up_input();
-        mp_pin_input_3 = pins.d13.into_pull_up_input();
-        mp_pin_input_pilot = pins.d12.into_pull_up_input();
-        loop {
-            rs485.flush().unwrap();
-            let pilot = mp_pin_input_pilot.is_low();
-            if pilot {
-                if !mp_pilot {
-                    usb.write_str("[MegaPoofer] Lighting Pilot...\n").unwrap();
-                }
-                mp_pilot = true;
-            } else if mp_pilot {
-                usb.write_str("[MegaPoofer] Turning Off Pilot...\n")
-                    .unwrap();
-                mp_pilot = false;
-            }
+    // } else if mp_enable && !sign_enable {
+    //     usb.write_str("[MegaPoofer] Enabled\n").unwrap();
+    //     mp_pin_all = pins.d8.into_pull_up_input();
+    //     mp_pin_input_1 = pins.d9.into_pull_up_input();
+    //     mp_pin_input_2 = pins.d10.into_pull_up_input();
+    //     mp_pin_input_3 = pins.d13.into_pull_up_input();
+    //     mp_pin_input_pilot = pins.d12.into_pull_up_input();
+    //     loop {
+    //         rs485.flush().unwrap();
+    //         let pilot = mp_pin_input_pilot.is_low();
+    //         if pilot {
+    //             if !mp_pilot {
+    //                 usb.write_str("[MegaPoofer] Lighting Pilot...\n").unwrap();
+    //             }
+    //             mp_pilot = true;
+    //         } else if mp_pilot {
+    //             usb.write_str("[MegaPoofer] Turning Off Pilot...\n")
+    //                 .unwrap();
+    //             mp_pilot = false;
+    //         }
 
-            let all = mp_pin_all.is_low();
+    //         let all = mp_pin_all.is_low();
 
-            let mut states: [bool; 16] = [false; 16];
-            states[0] = pilot;
-            states[1] = mp_pin_input_1.is_low() || all;
-            states[2] = mp_pin_input_2.is_low() || all;
-            states[3] = mp_pin_input_3.is_low() || all;
+    //         let mut states: [bool; 16] = [false; 16];
+    //         states[0] = pilot;
+    //         states[1] = mp_pin_input_1.is_low() || all;
+    //         states[2] = mp_pin_input_2.is_low() || all;
+    //         states[3] = mp_pin_input_3.is_low() || all;
 
-            let msg = HotlineMessage::new(0x01, states);
+    //         let msg = HotlineMessage::new(0x01, states);
 
-            match send_message(&mut rs485, msg,&mut usb) {
-                Ok(()) => {}
-                Err(()) => {
-                    usb.write_str("[MegaPoofer] Error Sending Hotline Message\n")
-                        .unwrap();
-                }
-            }
-            arduino_hal::delay_ms(10);
-        }
-    } else if sign_enable && mp_enable {
-        panic!("This controller cannot function as both an MegaPoofer input and a sign input. please ground only 1 of pin 3 or 4 to select sign or MegaPoofer.");
-    } else {
-        panic!("Neither Sign nor MegaPoofer is Configured. Please ground pin 3 for the Sign or pin 4 for MegaPoofer.");
-    }
+    //         match send_message(&mut rs485, msg,&mut usb) {
+    //             Ok(()) => {}
+    //             Err(()) => {
+    //                 usb.write_str("[MegaPoofer] Error Sending Hotline Message\n")
+    //                     .unwrap();
+    //             }
+    //         }
+    //         arduino_hal::delay_ms(10);
+    //     }
+    // } else if sign_enable && mp_enable {
+    // usb.write_str("PANIC 1\n").unwrap();
+    //     panic!("This controller cannot function as both an MegaPoofer input and a sign input. please ground only 1 of pin 3 or 4 to select sign or MegaPoofer.");
+    // } else {
+
+    // usb.write_str("PANIC 2\n").unwrap();
+    //     panic!("Neither Sign nor MegaPoofer is Configured. Please ground pin 3 for the Sign or pin 4 for MegaPoofer.");
+    // }
 }
 
 type UsartType =
@@ -168,14 +175,14 @@ fn send_message(serial: &mut Max485Type, msg: HotlineMessage, usb: &mut Usart<US
     for byte in cmd {
         match serial.write(byte) {
             Ok(()) => {
-                // ufmt::uwrite!(usb, "byte sent: {:X}\n", byte);
+                ufmt::uwrite!(usb, "byte sent: {:X}\n", byte).unwrap();
             }
             Err(_) => {
-                usb.write_str("[RS485] Failed to send byte.");
+                usb.write_str("[RS485] Failed to send byte.").unwrap();
                 return Err(());
             }
         };
-        arduino_hal::delay_ms(3);
+        arduino_hal::delay_ms(5);
     }
     Ok(())
 }
